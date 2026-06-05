@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wishlist — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .wishlist-page { padding:4rem 0 6rem; }
+    .wishlist-page h1 { font-family:var(--font-serif); font-size:2.5rem; margin-bottom:0.5rem; }
+    .wishlist-sub { color:var(--muted-foreground); margin-bottom:2.5rem; }
+    .wish-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:1.75rem; }
+    .wish-card { background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; transition:box-shadow 0.2s, transform 0.2s; }
+    .wish-card:hover { box-shadow:0 8px 32px rgba(0,0,0,0.1); transform:translateY(-3px); }
+    .wish-card-img { width:100%; height:200px; object-fit:cover; }
+    .wish-card-body { padding:1.25rem; }
+    .wish-card-name { font-family:var(--font-serif); font-size:1.05rem; font-weight:500; margin-bottom:0.25rem; }
+    .wish-card-cat { font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted-foreground); margin-bottom:0.5rem; }
+    .wish-card-price { font-size:1rem; font-weight:600; margin-bottom:1rem; }
+    .wish-card-actions { display:flex; gap:0.75rem; }
+    .btn-to-cart { flex:1; padding:0.6rem; background:var(--foreground); color:var(--primary-foreground); border:none; border-radius:6px; font-size:0.85rem; cursor:pointer; transition:opacity 0.2s; }
+    .btn-to-cart:hover { opacity:0.85; }
+    .btn-rm-wish { padding:0.6rem 0.9rem; border:1px solid var(--border); background:none; border-radius:6px; font-size:0.85rem; cursor:pointer; color:var(--muted-foreground); transition:all 0.2s; }
+    .btn-rm-wish:hover { border-color:#c0392b; color:#c0392b; }
+    .wish-empty { text-align:center; padding:5rem 2rem; color:var(--muted-foreground); }
+    .wish-empty h2 { font-family:var(--font-serif); font-size:1.75rem; color:var(--foreground); margin-bottom:0.75rem; }
+    .wish-empty a { display:inline-block; margin-top:1.5rem; padding:0.75rem 2rem; background:var(--foreground); color:var(--primary-foreground); border-radius:6px; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+  <div class="container wishlist-page">
+    <h1>My Wishlist</h1>
+    <p class="wishlist-sub">Your saved pieces — ready to add to cart or request a quote.</p>
+    <div id="wish-empty" class="wish-empty" style="display:none;">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 1.5rem;display:block;opacity:0.35;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <h2>Your wishlist is empty</h2>
+      <p>Browse our collection and click the ♥ on any product to save it here.</p>
+      <a href="products.html">Explore Collection</a>
+    </div>
+    <div class="wish-grid" id="wish-grid"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('header-placeholder').innerHTML = createHeader('wishlist.html');
+    initHamburger();
+    renderWishlist();
+
+    function renderWishlist() {
+      const list = getWishlist();
+      const grid = document.getElementById('wish-grid');
+      const empty = document.getElementById('wish-empty');
+      if (list.length === 0) { empty.style.display='block'; grid.style.display='none'; return; }
+      empty.style.display='none'; grid.style.display='grid';
+      grid.innerHTML = list.map(item => `
+        <div class="wish-card" id="wish-${item.slug}">
+          <a href="product-detail.html?slug=${item.slug}">
+            <img class="wish-card-img" src="${item.image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400'}" alt="${item.name}" onerror="this.src='https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=400'">
+          </a>
+          <div class="wish-card-body">
+            <div class="wish-card-cat">${getCategoryLabel(item.categoryId)}</div>
+            <div class="wish-card-name"><a href="product-detail.html?slug=${item.slug}">${item.name}</a></div>
+            <div class="wish-card-price">${formatPrice(item.price)}</div>
+            <div class="wish-card-actions">
+              <button class="btn-to-cart" onclick="moveToCart('${item.slug}')">Add to Cart</button>
+              <button class="btn-rm-wish" onclick="removeWish('${item.slug}')" title="Remove">♥</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    function moveToCart(slug) {
+      const product = PRODUCTS.find(p => p.slug === slug);
+      if (product) { addToCart(product); }
+    }
+    function removeWish(slug) {
+      const product = PRODUCTS.find(p => p.slug === slug);
+      if (product) { toggleWishlist(product); renderWishlist(); }
+    }
+  </script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

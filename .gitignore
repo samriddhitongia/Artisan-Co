@@ -1,0 +1,21 @@
+# Environment / secrets
+.env
+.env.local
+.env.production
+
+# Node (if ever added)
+node_modules/
+npm-debug.log*
+
+# Vercel
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

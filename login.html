@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .auth-page { min-height: 100vh; display:flex; flex-direction:column; }
+    .auth-main { flex:1; display:grid; grid-template-columns: 1fr 1fr; }
+    @media(max-width:768px){ .auth-main { grid-template-columns:1fr; } .auth-image { display:none; } }
+    .auth-image { background:url('https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=1200') center/cover no-repeat; position:relative; }
+    .auth-image::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg, rgba(0,0,0,0.5), rgba(0,0,0,0.2)); }
+    .auth-image-text { position:absolute; bottom:3rem; left:3rem; right:3rem; z-index:1; color:#fff; }
+    .auth-image-text h2 { font-family: var(--font-serif); font-size:2rem; margin-bottom:0.5rem; }
+    .auth-image-text p { opacity:0.85; font-size:0.95rem; line-height:1.6; }
+    .auth-image-perks { margin-top:1.5rem; display:flex; flex-direction:column; gap:0.5rem; }
+    .auth-image-perks span { font-size:0.85rem; opacity:0.9; display:flex; align-items:center; gap:0.5rem; }
+    .auth-form-panel { display:flex; align-items:center; justify-content:center; padding:3rem 2rem; background:var(--background); }
+    .auth-box { width:100%; max-width:420px; }
+    .auth-logo { font-family: var(--font-serif); font-size:1.6rem; font-weight:600; margin-bottom:2rem; }
+    .auth-tabs { display:flex; border-bottom:2px solid var(--border); margin-bottom:2rem; }
+    .auth-tab { padding:0.75rem 1.5rem; font-size:0.95rem; font-weight:500; cursor:pointer; background:none; border:none; border-bottom:2px solid transparent; margin-bottom:-2px; color:var(--muted-foreground); transition:all 0.2s; }
+    .auth-tab.active { color:var(--foreground); border-bottom-color:var(--foreground); }
+    .auth-panel { display:none; }
+    .auth-panel.active { display:block; }
+    .form-group { margin-bottom:1.25rem; position:relative; }
+    .form-group label { display:block; font-size:0.82rem; font-weight:600; margin-bottom:0.4rem; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.05em; }
+    .form-group input { width:100%; padding:0.75rem 1rem; border:1.5px solid var(--border); border-radius:8px; font-size:0.95rem; background:var(--background); color:var(--foreground); transition:border-color 0.2s, box-shadow 0.2s; }
+    .form-group input:focus { outline:none; border-color:var(--foreground); box-shadow:0 0 0 3px rgba(0,0,0,0.06); }
+    .form-group input.error { border-color:#c0392b; }
+    .form-group input.valid { border-color:#27ae60; }
+    .pw-wrap { position:relative; }
+    .pw-wrap input { padding-right:2.75rem; }
+    .pw-toggle { position:absolute; right:0.85rem; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--muted-foreground); padding:0; display:flex; align-items:center; transition:color 0.15s; }
+    .pw-toggle:hover { color:var(--foreground); }
+    .btn-auth-submit { width:100%; padding:0.875rem; background:var(--foreground); color:var(--primary-foreground); border:none; border-radius:8px; font-size:0.95rem; font-weight:500; cursor:pointer; transition:opacity 0.2s; margin-top:0.5rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
+    .btn-auth-submit:hover:not(:disabled) { opacity:0.85; }
+    .btn-auth-submit:disabled { opacity:0.6; cursor:not-allowed; }
+    .btn-spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,0.35); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; display:none; }
+    .btn-auth-submit.loading .btn-spinner { display:block; }
+    .btn-auth-submit.loading .btn-label { opacity:0.7; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .auth-divider { text-align:center; margin:1.25rem 0; color:var(--muted-foreground); font-size:0.85rem; position:relative; }
+    .auth-divider::before, .auth-divider::after { content:''; position:absolute; top:50%; width:38%; height:1px; background:var(--border); }
+    .auth-divider::before { left:0; } .auth-divider::after { right:0; }
+    .auth-error { color:#c0392b; font-size:0.85rem; margin-top:0.75rem; padding:0.65rem 0.85rem; background:#fff5f5; border:1px solid #f5c6c6; border-radius:6px; display:none; }
+    .auth-success { color:#1a7a46; font-size:0.85rem; margin-top:0.75rem; padding:0.65rem 0.85rem; background:#f0fff4; border:1px solid #b7e4c7; border-radius:6px; display:none; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .form-check { display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem; }
+    .form-check input[type="checkbox"] { width:16px; height:16px; cursor:pointer; accent-color:var(--foreground); }
+    .form-check label { font-size:0.85rem; color:var(--muted-foreground); cursor:pointer; }
+    .auth-footer-link { text-align:center; margin-top:1.25rem; font-size:0.85rem; color:var(--muted-foreground); }
+    .auth-footer-link a { color:var(--foreground); font-weight:500; text-decoration:underline; cursor:pointer; }
+    .field-hint { font-size:0.75rem; color:var(--muted-foreground); margin-top:0.3rem; }
+    .pw-strength { height:3px; border-radius:2px; margin-top:0.4rem; background:var(--border); overflow:hidden; }
+    .pw-strength-bar { height:100%; border-radius:2px; transition:width 0.3s, background 0.3s; width:0%; }
+    .forgot-link { float:right; font-size:0.8rem; color:var(--muted-foreground); cursor:pointer; text-decoration:underline; transition:color 0.15s; }
+    .forgot-link:hover { color:var(--foreground); }
+    .demo-banner { background:hsl(38,60%,92%); border:1px solid hsl(38,60%,78%); border-radius:8px; padding:0.65rem 1rem; margin-bottom:1.25rem; font-size:0.82rem; color:var(--foreground); display:flex; align-items:center; gap:0.5rem; }
+    .demo-banner strong { font-weight:600; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main class="auth-main">
+    <div class="auth-image">
+      <div class="auth-image-text">
+        <h2>Crafted for<br>Discerning Spaces</h2>
+        <p>Access your personal dashboard — wishlist, quote history, and a tailored experience await.</p>
+        <div class="auth-image-perks">
+          <span>✓ Save your wishlist across sessions</span>
+          <span>✓ Track quote requests &amp; orders</span>
+          <span>✓ Exclusive member pricing on bulk orders</span>
+          <span>✓ Early access to new collections</span>
+        </div>
+      </div>
+    </div>
+    <div class="auth-form-panel">
+      <div class="auth-box">
+        <div class="auth-logo"><a href="index.html">Artisan &amp; Co.</a></div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+          <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Create Account</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div class="auth-panel active" id="panel-login">
+          <div class="demo-banner">
+            💡 <span>Demo account: <strong>demo@artisanco.in</strong> / <strong>demo123</strong></span>
+          </div>
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="login-password">
+              Password
+              <span class="forgot-link" onclick="showForgot()">Forgot password?</span>
+            </label>
+            <div class="pw-wrap">
+              <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+              <button type="button" class="pw-toggle" onclick="togglePw('login-password', this)" tabindex="-1">
+                <svg id="eye-login" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-check">
+            <input type="checkbox" id="remember-me">
+            <label for="remember-me">Keep me signed in</label>
+          </div>
+          <div class="auth-error" id="login-error"></div>
+          <button class="btn-auth-submit" id="btn-login" onclick="doLogin()">
+            <span class="btn-spinner"></span>
+            <span class="btn-label">Sign In</span>
+          </button>
+          <div class="auth-footer-link">
+            Don't have an account? <a onclick="switchTab('register')">Create one free</a>
+          </div>
+        </div>
+
+        <!-- REGISTER -->
+        <div class="auth-panel" id="panel-register">
+          <div class="form-group">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" placeholder="Your full name" autocomplete="name">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-email">Email</label>
+              <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+              <label for="reg-phone">Phone <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+              <input type="tel" id="reg-phone" placeholder="+91 98765 43210">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="reg-password" placeholder="Minimum 6 characters" autocomplete="new-password" oninput="checkPwStrength(this.value)">
+              <button type="button" class="pw-toggle" onclick="togglePw('reg-password', this)" tabindex="-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="pw-strength"><div class="pw-strength-bar" id="pw-bar"></div></div>
+            <div class="field-hint" id="pw-hint"></div>
+          </div>
+          <div class="form-group">
+            <label for="reg-confirm">Confirm Password</label>
+            <div class="pw-wrap">
+              <input type="password" id="reg-confirm" placeholder="Repeat your password" autocomplete="new-password">
+              <button type="button" class="pw-toggle" onclick="togglePw('reg-confirm', this)" tabindex="-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="auth-error" id="reg-error"></div>
+          <div class="auth-success" id="reg-success"></div>
+          <button class="btn-auth-submit" id="btn-register" onclick="doRegister()">
+            <span class="btn-spinner"></span>
+            <span class="btn-label">Create Account</span>
+          </button>
+          <div class="auth-footer-link">
+            Already have an account? <a onclick="switchTab('login')">Sign in</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('header-placeholder').innerHTML = createHeader('login.html');
+    initHamburger();
+
+    /* ── Sheets CMS auth is live — demo accounts are seeded in Sheets ── */
+
+    /* ── Check URL param for tab ── */
+    const tabParam = new URLSearchParams(window.location.search).get('tab');
+    if (tabParam === 'register') switchTab('register');
+
+    /* ── Tab switch ── */
+    function switchTab(tab) {
+      ['login','register'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+      });
+      clearErrors();
+    }
+
+    /* ── Password visibility toggle ── */
+    function togglePw(id, btn) {
+      const inp = document.getElementById(id);
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.innerHTML = show
+        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    }
+
+    /* ── Password strength ── */
+    function checkPwStrength(pw) {
+      const bar = document.getElementById('pw-bar');
+      const hint = document.getElementById('pw-hint');
+      let score = 0;
+      if (pw.length >= 6) score++;
+      if (pw.length >= 10) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+      const levels = [
+        { w:'20%', bg:'#e74c3c', label:'Too short' },
+        { w:'40%', bg:'#e67e22', label:'Weak' },
+        { w:'60%', bg:'#f1c40f', label:'Fair' },
+        { w:'80%', bg:'#2ecc71', label:'Good' },
+        { w:'100%', bg:'#27ae60', label:'Strong ✓' },
+      ];
+      const lvl = levels[Math.min(score, 4)];
+      bar.style.width = lvl.w;
+      bar.style.background = lvl.bg;
+      hint.textContent = pw.length ? lvl.label : '';
+      hint.style.color = lvl.bg;
+    }
+
+    /* ── Clear errors ── */
+    function clearErrors() {
+      ['login-error','reg-error','reg-success'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      document.querySelectorAll('.form-group input').forEach(inp => inp.classList.remove('error','valid'));
+    }
+
+    /* ── Show error / success ── */
+    function showMsg(id, msg, type) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = 'block';
+      if (type === 'error') el.className = 'auth-error';
+      else el.className = 'auth-success';
+    }
+
+    /* ── Set button loading ── */
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = loading;
+      btn.classList.toggle('loading', loading);
+    }
+
+    /* ── Validate email format ── */
+    function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+    /* ── LOGIN ── */
+    async function doLogin() {
+      clearErrors();
+      const email = document.getElementById('login-email').value.trim();
+      const pass  = document.getElementById('login-password').value;
+      const remember = document.getElementById('remember-me').checked;
+
+      if (!email) {
+        document.getElementById('login-email').classList.add('error');
+        return showMsg('login-error', 'Please enter your email address.', 'error');
+      }
+      if (!isValidEmail(email)) {
+        document.getElementById('login-email').classList.add('error');
+        return showMsg('login-error', 'Please enter a valid email address.', 'error');
+      }
+      if (!pass) {
+        document.getElementById('login-password').classList.add('error');
+        return showMsg('login-error', 'Please enter your password.', 'error');
+      }
+
+      setLoading('btn-login', true);
+      try {
+        // ── Try Sheets first, fall back to localStorage ──
+        let result;
+        const sheetsReady = window.SheetsCMS &&
+          SheetsCMS.config.SPREADSHEET_ID !== 'YOUR_SPREADSHEET_ID_HERE';
+
+        if (sheetsReady) {
+          result = await SheetsCMS.login({ email, password: pass });
+        } else {
+          // localStorage fallback (original behaviour)
+          const users = JSON.parse(localStorage.getItem('artisan_users') || '[]');
+          const user  = users.find(u =>
+            u.email.toLowerCase() === email.toLowerCase() && u.password === pass);
+          result = user
+            ? { ok: true, user: { name: user.name, email: user.email } }
+            : { ok: false, error: 'Incorrect email or password. Try demo@artisanco.in / demo123' };
+        }
+
+        setLoading('btn-login', false);
+        if (!result.ok) {
+          document.getElementById('login-email').classList.add('error');
+          document.getElementById('login-password').classList.add('error');
+          return showMsg('login-error', result.error, 'error');
+        }
+        if (remember) localStorage.setItem('artisan_remember_email', email);
+        setUser({ name: result.user.name, email: result.user.email, role: result.user.role });
+        const redirect = new URLSearchParams(window.location.search).get('redirect');
+        window.location.href = redirect || 'index.html';
+      } catch (err) {
+        setLoading('btn-login', false);
+        showMsg('login-error', 'Connection error — please try again. (' + err.message + ')', 'error');
+      }
+    }
+
+    /* ── REGISTER ── */
+    async function doRegister() {
+      clearErrors();
+      const name    = document.getElementById('reg-name').value.trim();
+      const email   = document.getElementById('reg-email').value.trim();
+      const phone   = document.getElementById('reg-phone').value.trim();
+      const pass    = document.getElementById('reg-password').value;
+      const confirm = document.getElementById('reg-confirm').value;
+
+      if (!name) {
+        document.getElementById('reg-name').classList.add('error');
+        return showMsg('reg-error', 'Please enter your full name.', 'error');
+      }
+      if (!email || !isValidEmail(email)) {
+        document.getElementById('reg-email').classList.add('error');
+        return showMsg('reg-error', 'Please enter a valid email address.', 'error');
+      }
+      if (pass.length < 6) {
+        document.getElementById('reg-password').classList.add('error');
+        return showMsg('reg-error', 'Password must be at least 6 characters long.', 'error');
+      }
+      if (pass !== confirm) {
+        document.getElementById('reg-confirm').classList.add('error');
+        return showMsg('reg-error', 'Passwords do not match. Please try again.', 'error');
+      }
+
+      setLoading('btn-register', true);
+      try {
+        const sheetsReady = window.SheetsCMS &&
+          SheetsCMS.config.SPREADSHEET_ID !== 'YOUR_SPREADSHEET_ID_HERE';
+
+        let result;
+        if (sheetsReady) {
+          result = await SheetsCMS.register({ name, email, password: pass, phone });
+        } else {
+          // localStorage fallback
+          const users = JSON.parse(localStorage.getItem('artisan_users') || '[]');
+          if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+            result = { ok: false, error: 'An account with this email already exists. Sign in instead.' };
+          } else {
+            users.push({ name, email, phone, password: pass, createdAt: Date.now() });
+            localStorage.setItem('artisan_users', JSON.stringify(users));
+            result = { ok: true, user: { name, email } };
+          }
+        }
+
+        setLoading('btn-register', false);
+        if (!result.ok) {
+          document.getElementById('reg-email').classList.add('error');
+          return showMsg('reg-error', result.error, 'error');
+        }
+        setUser({ name: result.user.name, email: result.user.email, role: result.user.role || 'customer' });
+        showMsg('reg-success', `Welcome, ${name}! Your account has been created. Redirecting…`, 'success');
+        setTimeout(() => {
+          const redirect = new URLSearchParams(window.location.search).get('redirect');
+          window.location.href = redirect || 'index.html';
+        }, 1400);
+      } catch (err) {
+        setLoading('btn-register', false);
+        showMsg('reg-error', 'Registration failed — please try again. (' + err.message + ')', 'error');
+      }
+    }
+
+    /* ── Forgot password ── */
+    function showForgot() {
+      const email = document.getElementById('login-email').value.trim();
+      const msg = email && isValidEmail(email)
+        ? `A reset link has been sent to ${email}. Please check your inbox. (Demo: passwords are stored locally — just register a new account or use demo@artisanco.in / demo123)`
+        : 'Please enter your email address first, then click "Forgot password?".';
+      showMsg('login-error', msg, email && isValidEmail(email) ? 'success' : 'error');
+      const errEl = document.getElementById('login-error');
+      if (email && isValidEmail(email)) errEl.className = 'auth-success', errEl.style.display = 'block';
+    }
+
+    /* ── Pre-fill remembered email ── */
+    const rememberedEmail = localStorage.getItem('artisan_remember_email');
+    if (rememberedEmail) {
+      document.getElementById('login-email').value = rememberedEmail;
+      document.getElementById('remember-me').checked = true;
+    }
+
+    /* ── Enter key support ── */
+    ['login-email','login-password'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    });
+    ['reg-name','reg-email','reg-phone','reg-password','reg-confirm'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+    });
+
+    /* ── Real-time validation feedback ── */
+    document.getElementById('login-email').addEventListener('blur', function() {
+      if (this.value && !isValidEmail(this.value)) this.classList.add('error');
+      else if (this.value) this.classList.add('valid');
+    });
+    document.getElementById('reg-email').addEventListener('blur', function() {
+      if (this.value && !isValidEmail(this.value)) this.classList.add('error');
+      else if (this.value) this.classList.add('valid');
+    });
+    document.getElementById('reg-confirm').addEventListener('input', function() {
+      const pw = document.getElementById('reg-password').value;
+      this.classList.toggle('valid', this.value === pw && pw.length > 0);
+      this.classList.toggle('error', this.value !== pw && this.value.length > 0);
+    });
+  </script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

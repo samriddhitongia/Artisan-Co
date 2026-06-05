@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Journal — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .journal-hero { background:var(--secondary); padding:5rem 0 3.5rem; }
+    .journal-hero .section-eyebrow { margin-bottom:0.75rem; }
+    .journal-hero h1 { font-family:var(--font-serif); font-size:3rem; margin-bottom:1rem; }
+    .journal-hero p { color:var(--muted-foreground); max-width:560px; font-size:1.05rem; line-height:1.7; }
+    .journal-section { padding:4rem 0 6rem; }
+    .journal-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:2rem; }
+    @media(max-width:900px){ .journal-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:580px){ .journal-grid { grid-template-columns:1fr; } }
+    .journal-card { background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; transition:box-shadow 0.2s, transform 0.2s; }
+    .journal-card:hover { box-shadow:0 8px 32px rgba(0,0,0,0.12); transform:translateY(-2px); }
+    .journal-card-img { width:100%; height:220px; object-fit:cover; display:block; }
+    .journal-card-img-ph { width:100%; height:220px; background:var(--secondary); display:flex; align-items:center; justify-content:center; color:var(--muted-foreground); font-family:var(--font-serif); font-style:italic; }
+    .journal-card-body { padding:1.5rem; }
+    .journal-card-tag { display:inline-block; font-size:0.72rem; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--muted-foreground); margin-bottom:0.5rem; }
+    .journal-card-title { font-family:var(--font-serif); font-size:1.2rem; line-height:1.4; margin-bottom:0.6rem; }
+    .journal-card-excerpt { font-size:0.875rem; color:var(--muted-foreground); line-height:1.65; margin-bottom:1rem; }
+    .journal-card-meta { display:flex; align-items:center; justify-content:space-between; }
+    .journal-card-date { font-size:0.78rem; color:var(--muted-foreground); }
+    .journal-card-read { font-size:0.82rem; font-weight:600; color:var(--foreground); text-decoration:none; }
+    .journal-card-read:hover { text-decoration:underline; }
+    .journal-featured { margin-bottom:3rem; display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:center; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+    @media(max-width:760px){ .journal-featured { grid-template-columns:1fr; } }
+    .journal-featured-img { height:380px; object-fit:cover; width:100%; display:block; }
+    @media(max-width:760px){ .journal-featured-img { height:240px; } }
+    .journal-featured-body { padding:2.5rem; }
+    .journal-featured-body .tag { font-size:0.72rem; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--muted-foreground); display:block; margin-bottom:0.75rem; }
+    .journal-featured-body h2 { font-family:var(--font-serif); font-size:1.9rem; line-height:1.3; margin-bottom:1rem; }
+    .journal-featured-body p { color:var(--muted-foreground); line-height:1.7; margin-bottom:1.5rem; }
+    .journal-featured-body .read-link { display:inline-flex; align-items:center; gap:0.4rem; font-weight:600; font-size:0.9rem; color:var(--foreground); }
+    .journal-featured-body .read-link:hover { text-decoration:underline; }
+    .topics-bar { display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:2.5rem; }
+    .topic-btn { padding:0.4rem 1rem; border:1.5px solid var(--border); border-radius:20px; font-size:0.82rem; cursor:pointer; transition:all 0.15s; background:var(--card); color:var(--foreground); }
+    .topic-btn.active, .topic-btn:hover { background:var(--foreground); color:var(--primary-foreground); border-color:var(--foreground); }
+    .newsletter-box { background:var(--foreground); color:var(--primary-foreground); border-radius:12px; padding:2.5rem; text-align:center; margin-top:3.5rem; }
+    .newsletter-box h3 { font-family:var(--font-serif); font-size:1.5rem; margin-bottom:0.5rem; }
+    .newsletter-box p { opacity:0.8; margin-bottom:1.5rem; font-size:0.9rem; }
+    .newsletter-form { display:flex; gap:0.75rem; max-width:420px; margin:0 auto; }
+    .newsletter-form input { flex:1; padding:0.7rem 1rem; border-radius:7px; border:none; font-size:0.9rem; background:rgba(255,255,255,0.15); color:#fff; outline:none; }
+    .newsletter-form input::placeholder { color:rgba(255,255,255,0.6); }
+    .newsletter-form input:focus { background:rgba(255,255,255,0.2); }
+    .newsletter-form button { padding:0.7rem 1.4rem; border:2px solid rgba(255,255,255,0.5); border-radius:7px; background:none; color:#fff; font-size:0.88rem; font-weight:600; cursor:pointer; white-space:nowrap; transition:all 0.2s; }
+    .newsletter-form button:hover { background:rgba(255,255,255,0.15); border-color:#fff; }
+    @media(max-width:480px){ .newsletter-form { flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <section class="journal-hero">
+    <div class="container">
+      <p class="section-eyebrow">From the Studio</p>
+      <h1>Journal</h1>
+      <p>Design insights, project spotlights, material guides, and inspiration from the Artisan & Co. studio.</p>
+    </div>
+  </section>
+
+  <section class="journal-section">
+    <div class="container">
+
+      <!-- Featured Post -->
+      <div class="journal-featured fade-up">
+        <img class="journal-featured-img" src="https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&q=80&w=900" alt="Designing for the Modern Indian Office">
+        <div class="journal-featured-body">
+          <span class="tag">Featured · Design Insight</span>
+          <h2>Designing for the Modern Indian Office: What's Changed in 2025</h2>
+          <p>Hybrid work, wellness-first design, and the demand for adaptable furniture are reshaping corporate interiors across Mumbai, Bangalore, and Delhi. Here's what the smartest offices are doing differently.</p>
+          <p class="journal-card-date" style="margin-bottom:1rem;">June 2025 · 8 min read</p>
+          <a href="#" class="read-link" onclick="openArticle(0);return false;">Read Article →</a>
+        </div>
+      </div>
+
+      <!-- Topic Filter -->
+      <div class="topics-bar" id="topics-bar">
+        <button class="topic-btn active" data-topic="all">All Topics</button>
+        <button class="topic-btn" data-topic="design">Design &amp; Interiors</button>
+        <button class="topic-btn" data-topic="materials">Materials &amp; Craft</button>
+        <button class="topic-btn" data-topic="projects">Project Spotlights</button>
+        <button class="topic-btn" data-topic="care">Furniture Care</button>
+        <button class="topic-btn" data-topic="trends">Industry Trends</button>
+      </div>
+
+      <!-- Article Grid -->
+      <div class="journal-grid" id="journal-grid"></div>
+
+      <!-- Newsletter -->
+      <div class="newsletter-box fade-up">
+        <h3>Stay Inspired</h3>
+        <p>Get design guides, new arrivals, and project features delivered to your inbox monthly.</p>
+        <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+          <input type="email" id="newsletter-email" placeholder="your@email.com" required>
+          <button type="submit">Subscribe</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Article Modal -->
+  <div id="article-modal" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,0.6);overflow-y:auto;padding:2rem 1rem;">
+    <div style="max-width:740px;margin:0 auto;background:var(--background);border-radius:12px;overflow:hidden;position:relative;">
+      <button onclick="closeArticle()" style="position:absolute;top:1rem;right:1rem;background:var(--muted);border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div id="article-modal-content"></div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('header-placeholder').innerHTML = createHeader('blog.html');
+    document.getElementById('footer-placeholder').innerHTML = createFooter();
+    initHamburger();
+
+    const ARTICLES = [
+      {
+        id: 0,
+        tag: 'Design & Interiors',
+        topic: 'design',
+        title: 'Designing for the Modern Indian Office: What\'s Changed in 2025',
+        excerpt: 'Hybrid work, wellness-first design, and the demand for adaptable furniture are reshaping corporate interiors across India.',
+        date: 'June 2025',
+        readTime: '8 min read',
+        image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&q=80&w=700',
+        content: `<img src="https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&q=80&w=800" style="width:100%;height:300px;object-fit:cover;" alt="">
+          <div style="padding:2.5rem;">
+          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted-foreground);">Design & Interiors · June 2025 · 8 min read</span>
+          <h2 style="font-family:var(--font-serif);font-size:2rem;line-height:1.3;margin:0.75rem 0 1.25rem;">Designing for the Modern Indian Office: What's Changed in 2025</h2>
+          <p>The Indian corporate office has undergone a remarkable transformation in the post-pandemic years. Where open-plan layouts once dominated, today's forward-thinking companies are investing in furniture that serves both focused work and spontaneous collaboration.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">1. The Rise of Activity-Based Working</h3>
+          <p>Rather than assigned desks, employees now move through zones — heads-down booths with acoustic panels, open benches for collaborative sprints, and lounge areas for informal meetings. Our Churchgate Pod Workstation and Worli Pod Chair have been particularly popular for this reason.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">2. Ergonomics is Non-Negotiable</h3>
+          <p>Musculoskeletal health has moved from an HR talking point to a budget line item. Height-adjustable desks, lumbar-support chairs, and monitor arms are now standard specification items in Class A offices. The Lower Parel Sit-Stand Desk remains one of our fastest-growing products.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">3. Biophilic Design and Natural Materials</h3>
+          <p>Teak, stone, and natural textiles are returning to the office, countering the sterile glass-and-steel aesthetic of the previous decade. Clients are asking for warm wood finishes, plants, and soft furnishings that echo nature — a trend we've embraced across our Tables & Desks range.</p>
+          <p style="margin-top:1.5rem;"><a href="enquiry.html" style="padding:0.75rem 1.5rem;background:var(--foreground);color:var(--primary-foreground);border-radius:6px;font-size:0.9rem;font-weight:600;">Talk to our Design Team →</a></p>
+          </div>`
+      },
+      {
+        id: 1,
+        tag: 'Materials & Craft',
+        topic: 'materials',
+        title: 'Why We Only Use Grade-A Teak: A Guide to Wood Quality',
+        excerpt: 'Not all teak is created equal. We explain the difference between plantation teak, Grade-A, and recycled teak — and why it matters for longevity.',
+        date: 'May 2025',
+        readTime: '6 min read',
+        image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=700',
+        content: `<img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800" style="width:100%;height:300px;object-fit:cover;" alt="">
+          <div style="padding:2.5rem;">
+          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted-foreground);">Materials & Craft · May 2025 · 6 min read</span>
+          <h2 style="font-family:var(--font-serif);font-size:2rem;line-height:1.3;margin:0.75rem 0 1.25rem;">Why We Only Use Grade-A Teak</h2>
+          <p>Teak (Tectona grandis) is the gold standard of furniture timber — prized for its natural oils, tight grain, and exceptional durability. But the market is flooded with plantation teak of variable quality. Here's how to tell the difference.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Grade-A vs. Grade-B Teak</h3>
+          <p>Grade-A teak comes from the heartwood of mature trees (25+ years), has a rich golden-brown colour, and contains the highest concentration of natural oils. Grade-B is from outer rings, lighter in colour, and less resistant to moisture and insects. All Artisan & Co. teak products use Grade-A sourced from certified sustainable plantations.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Caring for Your Teak</h3>
+          <p>For indoor teak: dust regularly and apply teak oil once a year. For outdoor teak: allow it to weather naturally to a silver-grey patina, or apply teak oil every 3–6 months to maintain the golden colour. Never use bleach or harsh detergents.</p>
+          </div>`
+      },
+      {
+        id: 2,
+        tag: 'Project Spotlight',
+        topic: 'projects',
+        title: 'Inside the Fit-Out: 400 Workstations for a Pune Tech Campus',
+        excerpt: 'How we designed and delivered a complete office fit-out for 400 people in 12 weeks — and what we learned along the way.',
+        date: 'April 2025',
+        readTime: '10 min read',
+        image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=700',
+        content: `<img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800" style="width:100%;height:300px;object-fit:cover;" alt="">
+          <div style="padding:2.5rem;">
+          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted-foreground);">Project Spotlight · April 2025 · 10 min read</span>
+          <h2 style="font-family:var(--font-serif);font-size:2rem;line-height:1.3;margin:0.75rem 0 1.25rem;">400 Workstations for a Pune Tech Campus in 12 Weeks</h2>
+          <p>When a leading IT company approached us to furnish their new 80,000 sq ft campus in Hinjewadi, Pune, the brief was ambitious: deliver 400 workstations, 600 chairs, conference rooms, and a café — all within a 12-week timeline.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">The Brief</h3>
+          <p>The client wanted a warm, non-corporate aesthetic — natural wood finishes, biophilic elements, and ergonomic seating that reflected their culture of employee wellbeing. They also needed flexibility for future expansion.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Our Solution</h3>
+          <p>We specified the Bandra Workstation System in a warm walnut veneer, paired with the Prestige Ergonomic Chair. Conference rooms received the Malabar Conference Table with the Mayfair Conference Chair. The café area featured our Andheri Café Chairs and Worli Dining Tables in a custom burnt-orange finish.</p>
+          <p style="margin-top:1.5rem;"><a href="projects.html" style="padding:0.75rem 1.5rem;background:var(--foreground);color:var(--primary-foreground);border-radius:6px;font-size:0.9rem;font-weight:600;">View All Projects →</a></p>
+          </div>`
+      },
+      {
+        id: 3,
+        tag: 'Furniture Care',
+        topic: 'care',
+        title: 'The Complete Guide to Caring for Upholstered Furniture',
+        excerpt: 'Fabric, velvet, leather — each upholstery material needs a different care approach. Our conservation team shares their best-practice guide.',
+        date: 'March 2025',
+        readTime: '5 min read',
+        image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=700',
+        content: `<img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800" style="width:100%;height:300px;object-fit:cover;" alt="">
+          <div style="padding:2.5rem;">
+          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted-foreground);">Furniture Care · March 2025 · 5 min read</span>
+          <h2 style="font-family:var(--font-serif);font-size:2rem;line-height:1.3;margin:0.75rem 0 1.25rem;">The Complete Guide to Caring for Upholstered Furniture</h2>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Fabric Upholstery</h3>
+          <p>Vacuum regularly using an upholstery attachment. Treat spills immediately — blot (never rub) with a clean white cloth. For deep cleaning, use a foam-based fabric cleaner and allow to dry fully before use. Rotate cushions to distribute wear evenly.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Leather Upholstery</h3>
+          <p>Wipe with a lightly damp cloth monthly. Apply a leather conditioner every 6–12 months to prevent drying and cracking. Keep away from direct sunlight and heat sources. Never use saddle soap or silicone-based products.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Velvet</h3>
+          <p>Velvet pile can be restored by steaming gently and brushing in the direction of the pile. Avoid pressing or crushing the pile. Spot clean with a velvet brush and mild detergent solution. Professional cleaning recommended annually for commercial installations.</p>
+          </div>`
+      },
+      {
+        id: 4,
+        tag: 'Industry Trends',
+        topic: 'trends',
+        title: 'The Biophilic Office: How Plants and Natural Materials Boost Productivity',
+        excerpt: 'Research shows employees in biophilically-designed offices are 15% more productive. Here\'s how to incorporate natural elements into your workspace.',
+        date: 'February 2025',
+        readTime: '7 min read',
+        image: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=700',
+        content: `<img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&q=80&w=800" style="width:100%;height:300px;object-fit:cover;" alt="">
+          <div style="padding:2.5rem;">
+          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted-foreground);">Industry Trends · February 2025 · 7 min read</span>
+          <h2 style="font-family:var(--font-serif);font-size:2rem;line-height:1.3;margin:0.75rem 0 1.25rem;">The Biophilic Office: Natural Materials & Productivity</h2>
+          <p>Studies from the Human Spaces Report found that employees in offices incorporating natural elements report 15% higher levels of wellbeing and 6% higher productivity. In India, where urban density is high, this matters more than ever.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">What is Biophilic Design?</h3>
+          <p>Biophilic design brings natural elements — wood, stone, water, plants, natural light — into the built environment. It's not just about placing a few plants; it's a holistic approach to space planning that acknowledges humans' innate connection to nature.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Our Recommendations</h3>
+          <p>Start with furniture: choose teak, walnut, or oak over laminates. Add our Juhu Teak Planter at key touchpoints. Pair stone-top tables (our Gateway Marble Table) with warm fabric upholstery. Use natural-fibre rugs to define zones.</p>
+          </div>`
+      },
+      {
+        id: 5,
+        tag: 'Materials & Craft',
+        topic: 'materials',
+        title: 'Marble, Terrazzo, or Engineered Stone? Choosing the Right Table Top',
+        excerpt: 'Each stone material has unique properties. We break down the pros, cons, maintenance, and ideal use cases for each — so you can specify with confidence.',
+        date: 'January 2025',
+        readTime: '6 min read',
+        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=700',
+        content: `<img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=800" style="width:100%;height:300px;object-fit:cover;" alt="">
+          <div style="padding:2.5rem;">
+          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted-foreground);">Materials & Craft · January 2025 · 6 min read</span>
+          <h2 style="font-family:var(--font-serif);font-size:2rem;line-height:1.3;margin:0.75rem 0 1.25rem;">Marble, Terrazzo, or Engineered Stone?</h2>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Italian Marble</h3>
+          <p>The premium choice. Natural Carrara or Calacatta marble is unmatched in elegance and each slab is unique. It is porous — requiring sealing annually — and can etch with acidic liquids. Best for low-traffic statement pieces like our Gateway Marble Centre Table in executive lobbies.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Terrazzo</h3>
+          <p>A composite of marble chips in cement or resin, terrazzo is extremely durable, highly customisable, and more forgiving than natural marble. Our Juhu Terrazzo Table uses resin-base terrazzo with recycled marble chips — ideal for café and restaurant settings.</p>
+          <h3 style="font-family:var(--font-serif);font-size:1.2rem;margin:1.5rem 0 0.5rem;">Engineered / Quartz Stone</h3>
+          <p>Non-porous, scratch-resistant, and highly consistent in colour. Ideal for high-traffic hospitality and healthcare settings where hygiene and durability are paramount. Available in virtually unlimited colours and finishes.</p>
+          </div>`
+      },
+    ];
+
+    let activeTopic = 'all';
+
+    function renderGrid() {
+      const grid = document.getElementById('journal-grid');
+      const filtered = activeTopic === 'all' ? ARTICLES : ARTICLES.filter(a => a.topic === activeTopic);
+      grid.innerHTML = filtered.map(a => `
+        <div class="journal-card fade-up">
+          ${a.image ? `<img class="journal-card-img" src="${a.image}" alt="${a.title}" loading="lazy">` : `<div class="journal-card-img-ph">No image</div>`}
+          <div class="journal-card-body">
+            <span class="journal-card-tag">${a.tag}</span>
+            <h3 class="journal-card-title">${a.title}</h3>
+            <p class="journal-card-excerpt">${a.excerpt}</p>
+            <div class="journal-card-meta">
+              <span class="journal-card-date">${a.date} · ${a.readTime}</span>
+              <a href="#" class="journal-card-read" onclick="openArticle(${a.id});return false;">Read →</a>
+            </div>
+          </div>
+        </div>`).join('');
+      initScrollAnimations();
+    }
+
+    document.getElementById('topics-bar').addEventListener('click', e => {
+      const btn = e.target.closest('[data-topic]');
+      if (!btn) return;
+      activeTopic = btn.dataset.topic;
+      document.querySelectorAll('[data-topic]').forEach(b => b.classList.toggle('active', b.dataset.topic === activeTopic));
+      renderGrid();
+    });
+
+    window.openArticle = function(id) {
+      const article = ARTICLES.find(a => a.id === id);
+      if (!article) return;
+      document.getElementById('article-modal-content').innerHTML = article.content;
+      document.getElementById('article-modal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    };
+    window.closeArticle = function() {
+      document.getElementById('article-modal').style.display = 'none';
+      document.body.style.overflow = '';
+    };
+    document.getElementById('article-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('article-modal')) closeArticle();
+    });
+
+    function subscribeNewsletter(e) {
+      e.preventDefault();
+      const email = document.getElementById('newsletter-email').value;
+      const subs = JSON.parse(localStorage.getItem('artisan_newsletter_subs') || '[]');
+      if (!subs.includes(email)) { subs.push(email); localStorage.setItem('artisan_newsletter_subs', JSON.stringify(subs)); }
+      showToast('Thank you for subscribing! You\'ll receive our next journal issue in your inbox.', 'success', 5000);
+      document.getElementById('newsletter-email').value = '';
+    }
+
+    renderGrid();
+    initScrollAnimations();
+  </script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

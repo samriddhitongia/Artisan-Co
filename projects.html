@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div id="header-placeholder"></div>
+
+  <!-- Page hero -->
+  <section class="page-hero">
+    <div class="page-hero-bg">
+      <img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&q=80&w=2000" alt="Our Projects">
+    </div>
+    <div class="page-hero-overlay"></div>
+    <div class="container page-hero-content">
+      <nav class="page-breadcrumb">HOME / <span>PROJECTS</span></nav>
+      <h1>Selected Projects</h1>
+      <p class="page-hero-sub">800+ completed projects across finance, hospitality, healthcare and technology sectors in India.</p>
+    </div>
+  </section>
+
+  <!-- Toggle: grid vs list -->
+  <section style="padding:4rem 0 6rem;">
+    <div class="container">
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-bottom:2rem;">
+        <button class="filter-btn active" id="view-grid" title="Grid view">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Grid
+        </button>
+        <button class="filter-btn" id="view-list" title="List view">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          List
+        </button>
+      </div>
+
+      <!-- Industry filter -->
+      <div class="filter-bar" id="industry-filter"></div>
+
+      <div id="projects-grid" class="projects-grid"></div>
+      <div id="projects-list" class="projects-list" style="display:none;"></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <p class="section-eyebrow" style="text-align:center;">Your Next Project</p>
+      <h2>Let's build something extraordinary.</h2>
+      <p>From a single statement piece to an entire campus — tell us what you're planning.</p>
+      <a href="enquiry.html" class="btn-dark">START A CONVERSATION</a>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

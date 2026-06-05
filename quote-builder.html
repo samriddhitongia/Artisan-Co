@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quote Builder — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .qb-page { padding:4rem 0 6rem; }
+    .qb-page h1 { font-family:var(--font-serif); font-size:2.5rem; margin-bottom:0.5rem; }
+    .qb-page .sub { color:var(--muted-foreground); margin-bottom:2.5rem; }
+    .qb-grid { display:grid; grid-template-columns:1fr 360px; gap:2.5rem; align-items:start; }
+    @media(max-width:900px){ .qb-grid { grid-template-columns:1fr; } }
+    .qb-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:1.75rem; margin-bottom:1.5rem; }
+    .qb-card h3 { font-family:var(--font-serif); font-size:1.2rem; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.5rem; }
+    .step-badge { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; background:var(--foreground); color:var(--primary-foreground); border-radius:50%; font-size:0.8rem; font-weight:700; flex-shrink:0; }
+    .form-group { display:flex; flex-direction:column; gap:0.35rem; margin-bottom:1rem; }
+    .form-group label { font-size:0.8rem; font-weight:600; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.06em; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding:0.65rem 0.9rem; border:1.5px solid var(--border); border-radius:7px;
+      font-size:0.9rem; background:var(--background); color:var(--foreground); outline:none; transition:border-color 0.2s; font-family:var(--font-sans);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--foreground); }
+    .form-group textarea { min-height:90px; resize:vertical; }
+    .form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    @media(max-width:580px){ .form-row-2 { grid-template-columns:1fr; } }
+    /* Product picker */
+    .product-search-wrap { position:relative; margin-bottom:0.75rem; }
+    .product-search-wrap input { width:100%; }
+    .product-dropdown { position:absolute; top:100%; left:0; right:0; background:var(--card); border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.12); max-height:260px; overflow-y:auto; z-index:100; display:none; }
+    .product-dropdown.open { display:block; }
+    .product-dropdown-item { padding:0.65rem 1rem; cursor:pointer; font-size:0.875rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; }
+    .product-dropdown-item:last-child { border-bottom:none; }
+    .product-dropdown-item:hover { background:var(--muted); }
+    .product-dropdown-item .price { color:var(--muted-foreground); font-size:0.8rem; }
+    /* Quote items table */
+    .qb-items-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    .qb-items-table th { text-align:left; padding:0.5rem 0.75rem; font-size:0.75rem; font-weight:700; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.06em; border-bottom:2px solid var(--border); }
+    .qb-items-table td { padding:0.75rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .qb-items-table tr:last-child td { border-bottom:none; }
+    .qb-qty-ctrl { display:flex; align-items:center; border:1px solid var(--border); border-radius:5px; overflow:hidden; }
+    .qb-qty-btn { width:28px; height:28px; background:var(--muted); border:none; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; }
+    .qb-qty-val { width:36px; text-align:center; font-size:0.875rem; }
+    .qb-remove-btn { background:none; border:none; color:var(--muted-foreground); cursor:pointer; font-size:1.2rem; line-height:1; padding:0.25rem; }
+    .qb-remove-btn:hover { color:#c0392b; }
+    .qb-empty-state { text-align:center; padding:2rem 1rem; color:var(--muted-foreground); font-style:italic; font-size:0.875rem; }
+    /* Quote summary */
+    .quote-summary-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:1.75rem; position:sticky; top:84px; }
+    .quote-summary-card h3 { font-family:var(--font-serif); font-size:1.2rem; margin-bottom:1.25rem; }
+    .qs-row { display:flex; justify-content:space-between; font-size:0.9rem; padding:0.4rem 0; }
+    .qs-row.total { font-size:1.05rem; font-weight:700; padding-top:0.75rem; border-top:2px solid var(--foreground); margin-top:0.5rem; }
+    .btn-submit-quote { width:100%; padding:1rem; background:var(--foreground); color:var(--primary-foreground); border:none; border-radius:8px; font-size:0.95rem; font-weight:600; cursor:pointer; margin-top:1.25rem; transition:opacity 0.2s; }
+    .btn-submit-quote:hover { opacity:0.85; }
+    .btn-download-pdf { width:100%; padding:0.8rem; background:none; color:var(--foreground); border:2px solid var(--border); border-radius:8px; font-size:0.875rem; font-weight:600; cursor:pointer; margin-top:0.65rem; transition:all 0.2s; }
+    .btn-download-pdf:hover { border-color:var(--foreground); background:var(--muted); }
+    .quote-ref { font-size:0.78rem; color:var(--muted-foreground); margin-top:0.75rem; text-align:center; }
+    .customisation-row { background:var(--muted); border-radius:6px; padding:0.65rem 0.75rem; margin-top:0.4rem; font-size:0.8rem; color:var(--muted-foreground); display:flex; align-items:center; gap:0.5rem; }
+    .add-note-btn { background:none; border:none; font-size:0.78rem; color:var(--muted-foreground); cursor:pointer; text-decoration:underline; padding:0; }
+    /* Success screen */
+    .qb-success { display:none; text-align:center; padding:4rem 2rem; }
+    .qb-success h2 { font-family:var(--font-serif); font-size:2rem; margin-bottom:1rem; }
+    .qb-success p { color:var(--muted-foreground); margin-bottom:0.5rem; }
+    .qb-success a { display:inline-block; margin-top:1.5rem; padding:0.75rem 2rem; background:var(--foreground); color:var(--primary-foreground); border-radius:6px; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <div class="container qb-page">
+
+    <div id="qb-success" class="qb-success">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 1.5rem;display:block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <h2>Quote Submitted!</h2>
+      <p>Your project quote has been sent to our team.</p>
+      <div id="qb-quote-ref" style="font-size:1.1rem;font-weight:600;font-family:var(--font-serif);margin:1rem 0;"></div>
+      <p style="font-size:0.875rem;">Our design consultant will review your requirements and get back to you within 1 business day with a formal proposal.</p>
+      <p style="font-size:0.85rem;color:var(--muted-foreground);margin-top:0.5rem;">info@artisanco.in | +91 731 234 5678</p>
+      <a href="products.html">Continue Browsing</a>
+    </div>
+
+    <div id="qb-form-wrap">
+      <h1>Quote Builder</h1>
+      <p class="sub">Select products, quantities, and customisation preferences — then submit for a formal proposal within 1 business day.</p>
+
+      <div class="qb-grid">
+        <div>
+          <!-- Step 1: Products -->
+          <div class="qb-card">
+            <h3><span class="step-badge">1</span> Select Products</h3>
+            <div class="product-search-wrap">
+              <input type="text" id="product-search" placeholder="Search by name or category…" autocomplete="off">
+              <div class="product-dropdown" id="product-dropdown"></div>
+            </div>
+            <div id="qb-items-wrap">
+              <table class="qb-items-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th style="width:100px;">Qty</th>
+                    <th style="width:100px;text-align:right;">Subtotal</th>
+                    <th style="width:36px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="qb-items-tbody">
+                  <tr id="qb-empty-row"><td colspan="4" class="qb-empty-state">No products added yet. Search above to add items.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Step 2: Customisation -->
+          <div class="qb-card">
+            <h3><span class="step-badge">2</span> Customisation Requirements</h3>
+            <div class="form-group">
+              <label>Preferred Finish / Colour</label>
+              <select id="qb-finish">
+                <option value="">Standard finish (as displayed)</option>
+                <option>Natural Teak</option>
+                <option>Walnut</option>
+                <option>Dark Oak / Wenge</option>
+                <option>Painted White</option>
+                <option>Painted Black / Charcoal</option>
+                <option>Brushed Chrome</option>
+                <option>Powder-coated Black</option>
+                <option>Custom — specify in notes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Upholstery Preference</label>
+              <select id="qb-fabric">
+                <option value="">Standard fabric (as displayed)</option>
+                <option>Premium Fabric — specify colour in notes</option>
+                <option>Full-grain Leather — Black</option>
+                <option>Full-grain Leather — Tan</option>
+                <option>Velvet — specify colour in notes</option>
+                <option>Mesh (for chairs)</option>
+                <option>Customer-supplied fabric</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Dimension Modifications (if any)</label>
+              <input type="text" id="qb-dimensions" placeholder="e.g. Increase desk depth to 900mm, table length to 4.5m">
+            </div>
+            <div class="form-group">
+              <label>Additional Notes / Special Requirements</label>
+              <textarea id="qb-notes" placeholder="Site constraints, installation requirements, phased delivery schedule, corporate branding requirements…"></textarea>
+            </div>
+          </div>
+
+          <!-- Step 3: Project Info -->
+          <div class="qb-card">
+            <h3><span class="step-badge">3</span> Project &amp; Contact Details</h3>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" id="qb-name" placeholder="Full name" required>
+              </div>
+              <div class="form-group">
+                <label>Company / Organisation</label>
+                <input type="text" id="qb-company" placeholder="Company name">
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="qb-email" placeholder="you@company.in" required>
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="qb-phone" placeholder="+91 98765 43210" required>
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Project Type</label>
+                <select id="qb-project-type">
+                  <option value="">Select project type</option>
+                  <option>Corporate Office</option>
+                  <option>Hotel / Hospitality</option>
+                  <option>Restaurant / Café</option>
+                  <option>Hospital / Healthcare</option>
+                  <option>Educational Institution</option>
+                  <option>Government / Civic</option>
+                  <option>Residential</option>
+                  <option>Other Commercial</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Site Location / City</label>
+                <input type="text" id="qb-location" placeholder="e.g. BKC, Mumbai">
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Estimated Project Budget</label>
+                <select id="qb-budget">
+                  <option value="">Not specified</option>
+                  <option>Under ₹5 Lakhs</option>
+                  <option>₹5L – ₹20L</option>
+                  <option>₹20L – ₹50L</option>
+                  <option>₹50L – ₹1 Crore</option>
+                  <option>Above ₹1 Crore</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Required Delivery Date</label>
+                <input type="date" id="qb-delivery-date">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quote Summary Sidebar -->
+        <div class="quote-summary-card">
+          <h3>Quote Summary</h3>
+          <div id="qs-items-list" style="max-height:260px;overflow-y:auto;margin-bottom:1rem;border-bottom:1px solid var(--border);padding-bottom:0.75rem;">
+            <p style="font-size:0.82rem;color:var(--muted-foreground);font-style:italic;">No items added yet.</p>
+          </div>
+          <div class="qs-row"><span>Product Subtotal</span><span id="qs-subtotal">₹0</span></div>
+          <div class="qs-row"><span>GST (18%)</span><span id="qs-gst">₹0</span></div>
+          <div class="qs-row"><span>Delivery</span><span>As quoted</span></div>
+          <div class="qs-row total"><span>Estimated Total</span><span id="qs-total">₹0</span></div>
+          <p style="font-size:0.75rem;color:var(--muted-foreground);margin-top:0.5rem;">Prices are indicative. Final quote confirmed after review.</p>
+          <button class="btn-submit-quote" onclick="submitQuote()">Submit Quote Request →</button>
+          <button class="btn-download-pdf" onclick="printQuote()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:5px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print / Save as PDF
+          </button>
+          <p class="quote-ref" id="quote-ref-display"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('header-placeholder').innerHTML = createHeader('quote-builder.html');
+    document.getElementById('footer-placeholder').innerHTML = createFooter();
+    initHamburger();
+
+    const quoteRef = 'QT-' + Date.now().toString().slice(-8);
+    document.getElementById('quote-ref-display').textContent = 'Ref: ' + quoteRef;
+
+    let quoteItems = [];
+
+    // Pre-fill user details
+    const user = typeof getUser === 'function' ? getUser() : null;
+    if (user) {
+      if (user.name) document.getElementById('qb-name').value = user.name;
+      if (user.email) document.getElementById('qb-email').value = user.email;
+    }
+
+    // Product search
+    const searchInput = document.getElementById('product-search');
+    const dropdown = document.getElementById('product-dropdown');
+
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase().trim();
+      if (!q) { dropdown.classList.remove('open'); return; }
+      const matches = PRODUCTS.filter(p =>
+        p.name.toLowerCase().includes(q) || getCategoryLabel(p.categoryId).toLowerCase().includes(q)
+      ).slice(0, 12);
+      if (!matches.length) { dropdown.classList.remove('open'); return; }
+      dropdown.innerHTML = matches.map(p => {
+        const price = getProductPrice(p.slug);
+        return `<div class="product-dropdown-item" data-slug="${p.slug}">
+          <span>${p.name} <small style="color:var(--muted-foreground);font-size:0.75rem;">${getCategoryLabel(p.categoryId)}</small></span>
+          <span class="price">${price ? formatPrice(price) : 'POR'}</span>
+        </div>`;
+      }).join('');
+      dropdown.classList.add('open');
+    });
+    dropdown.addEventListener('click', e => {
+      const item = e.target.closest('[data-slug]');
+      if (!item) return;
+      addProductToQuote(item.dataset.slug);
+      searchInput.value = '';
+      dropdown.classList.remove('open');
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.product-search-wrap')) dropdown.classList.remove('open');
+    });
+
+    function addProductToQuote(slug) {
+      const existing = quoteItems.find(i => i.slug === slug);
+      if (existing) { existing.qty++; }
+      else {
+        const product = PRODUCTS.find(p => p.slug === slug);
+        if (!product) return;
+        quoteItems.push({ slug, name: product.name, categoryId: product.categoryId, price: getProductPrice(slug) || 0, qty: 1 });
+      }
+      renderQuoteItems();
+    }
+
+    function renderQuoteItems() {
+      const tbody = document.getElementById('qb-items-tbody');
+      const qsList = document.getElementById('qs-items-list');
+      if (!quoteItems.length) {
+        tbody.innerHTML = '<tr id="qb-empty-row"><td colspan="4" class="qb-empty-state">No products added yet.</td></tr>';
+        qsList.innerHTML = '<p style="font-size:0.82rem;color:var(--muted-foreground);font-style:italic;">No items added yet.</p>';
+        updateSummary();
+        return;
+      }
+      tbody.innerHTML = quoteItems.map(item => `
+        <tr>
+          <td>
+            <div style="font-weight:500;font-size:0.875rem;">${item.name}</div>
+            <div style="font-size:0.75rem;color:var(--muted-foreground);">${getCategoryLabel(item.categoryId)}</div>
+          </td>
+          <td>
+            <div class="qb-qty-ctrl">
+              <button class="qb-qty-btn" onclick="changeQty('${item.slug}',-1)">−</button>
+              <span class="qb-qty-val">${item.qty}</span>
+              <button class="qb-qty-btn" onclick="changeQty('${item.slug}',1)">+</button>
+            </div>
+          </td>
+          <td style="text-align:right;font-size:0.875rem;font-weight:600;">${item.price ? formatPrice(item.price * item.qty) : 'POR'}</td>
+          <td><button class="qb-remove-btn" onclick="removeFromQuote('${item.slug}')">×</button></td>
+        </tr>`).join('');
+      qsList.innerHTML = quoteItems.map(i => `
+        <div style="display:flex;justify-content:space-between;font-size:0.82rem;padding:0.35rem 0;border-bottom:1px solid var(--border);">
+          <span>${i.name} × ${i.qty}</span>
+          <span style="font-weight:600;">${i.price ? formatPrice(i.price * i.qty) : 'POR'}</span>
+        </div>`).join('');
+      updateSummary();
+    }
+
+    window.changeQty = function(slug, delta) {
+      const item = quoteItems.find(i => i.slug === slug);
+      if (!item) return;
+      item.qty = Math.max(1, item.qty + delta);
+      renderQuoteItems();
+    };
+    window.removeFromQuote = function(slug) {
+      quoteItems = quoteItems.filter(i => i.slug !== slug);
+      renderQuoteItems();
+    };
+
+    function updateSummary() {
+      const subtotal = quoteItems.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
+      const gst = Math.round(subtotal * 0.18);
+      document.getElementById('qs-subtotal').textContent = formatPrice(subtotal);
+      document.getElementById('qs-gst').textContent = formatPrice(gst);
+      document.getElementById('qs-total').textContent = formatPrice(subtotal + gst);
+    }
+
+    function submitQuote() {
+      if (!quoteItems.length) { showToast('Please add at least one product to your quote.', 'error'); return; }
+      const name = document.getElementById('qb-name').value.trim();
+      const email = document.getElementById('qb-email').value.trim();
+      const phone = document.getElementById('qb-phone').value.trim();
+      if (!name || !email || !phone) { showToast('Please fill in your name, email, and phone number.', 'error'); return; }
+      const quoteData = {
+        ref: quoteRef,
+        date: new Date().toISOString(),
+        items: quoteItems,
+        total: quoteItems.reduce((s, i) => s + (i.price || 0) * i.qty, 0),
+        customisation: {
+          finish: document.getElementById('qb-finish').value,
+          fabric: document.getElementById('qb-fabric').value,
+          dimensions: document.getElementById('qb-dimensions').value,
+          notes: document.getElementById('qb-notes').value,
+        },
+        contact: {
+          name, email, phone,
+          company: document.getElementById('qb-company').value,
+          projectType: document.getElementById('qb-project-type').value,
+          location: document.getElementById('qb-location').value,
+          budget: document.getElementById('qb-budget').value,
+          deliveryDate: document.getElementById('qb-delivery-date').value,
+        },
+        status: 'Pending'
+      };
+      const existing = JSON.parse(localStorage.getItem('artisan_quotes') || '[]');
+      existing.unshift(quoteData);
+      localStorage.setItem('artisan_quotes', JSON.stringify(existing));
+      document.getElementById('qb-form-wrap').style.display = 'none';
+      document.getElementById('qb-success').style.display = 'block';
+      document.getElementById('qb-quote-ref').textContent = 'Quote Ref: ' + quoteRef;
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+
+    function printQuote() {
+      window.print();
+    }
+  </script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

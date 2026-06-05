@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .payment-page { padding: 4rem 0 6rem; }
+    .payment-page h1 { font-family:var(--font-serif); font-size:2.5rem; margin-bottom:0.5rem; }
+    .payment-page .sub { color:var(--muted-foreground); margin-bottom:2.5rem; font-size:0.95rem; }
+    .payment-grid { display:grid; grid-template-columns:1fr 340px; gap:2.5rem; align-items:start; }
+    @media(max-width:900px){ .payment-grid { grid-template-columns:1fr; } }
+    .payment-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:2rem; }
+    .payment-card h3 { font-family:var(--font-serif); font-size:1.2rem; margin-bottom:1.5rem; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    @media(max-width:600px){ .form-row { grid-template-columns:1fr; } }
+    .form-group { display:flex; flex-direction:column; gap:0.35rem; margin-bottom:1rem; }
+    .form-group label { font-size:0.82rem; font-weight:600; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.06em; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding:0.65rem 0.9rem; border:1.5px solid var(--border); border-radius:7px;
+      font-size:0.9rem; background:var(--background); color:var(--foreground); outline:none;
+      transition:border-color 0.2s; font-family:var(--font-sans);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--foreground); }
+    .form-group textarea { min-height:80px; resize:vertical; }
+    .payment-methods { display:flex; flex-direction:column; gap:0.65rem; margin-top:0.25rem; }
+    .payment-method-option { display:flex; align-items:center; gap:0.75rem; padding:0.85rem 1rem; border:1.5px solid var(--border); border-radius:8px; cursor:pointer; transition:border-color 0.2s; }
+    .payment-method-option:hover { border-color:var(--foreground); }
+    .payment-method-option.selected { border-color:var(--foreground); background:var(--muted); }
+    .payment-method-option input[type=radio] { accent-color:var(--foreground); }
+    .payment-method-label { font-size:0.9rem; font-weight:500; }
+    .payment-method-desc { font-size:0.78rem; color:var(--muted-foreground); }
+    .card-fields { margin-top:1rem; padding:1rem; background:var(--muted); border-radius:8px; display:none; }
+    .card-fields.visible { display:block; }
+    .btn-pay { width:100%; padding:1.1rem; background:var(--foreground); color:var(--primary-foreground); border:none; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; margin-top:1.5rem; transition:opacity 0.2s; letter-spacing:0.04em; }
+    .btn-pay:hover { opacity:0.85; }
+    .order-summary-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:1.75rem; position:sticky; top:84px; }
+    .order-summary-card h3 { font-family:var(--font-serif); font-size:1.2rem; margin-bottom:1.25rem; }
+    .summary-item { display:flex; justify-content:space-between; font-size:0.875rem; padding:0.4rem 0; border-bottom:1px solid var(--border); }
+    .summary-item:last-of-type { border-bottom:none; }
+    .summary-totals { margin-top:1rem; }
+    .summary-row { display:flex; justify-content:space-between; margin-bottom:0.6rem; font-size:0.9rem; }
+    .summary-row.grand-total { font-size:1.05rem; font-weight:700; padding-top:0.75rem; border-top:2px solid var(--foreground); margin-top:0.5rem; }
+    .breadcrumb-steps { display:flex; align-items:center; gap:0.5rem; font-size:0.82rem; color:var(--muted-foreground); margin-bottom:2rem; }
+    .breadcrumb-steps .step.active { color:var(--foreground); font-weight:600; }
+    .breadcrumb-steps .sep { opacity:0.4; }
+    .success-screen { display:none; text-align:center; padding:4rem 2rem; }
+    .success-screen h2 { font-family:var(--font-serif); font-size:2rem; margin-bottom:1rem; }
+    .success-screen p { color:var(--muted-foreground); margin-bottom:0.5rem; }
+    .success-screen a { display:inline-block; margin-top:1.5rem; padding:0.75rem 2rem; background:var(--foreground); color:var(--primary-foreground); border-radius:6px; }
+    .trust-badges { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:1rem; }
+    .trust-badge { display:flex; align-items:center; gap:0.35rem; font-size:0.75rem; color:var(--muted-foreground); }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <div class="container payment-page">
+
+    <div id="success-screen" class="success-screen">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 1.5rem;display:block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <h2>Order Confirmed!</h2>
+      <p>Your order has been placed successfully.</p>
+      <div style="font-size:1.1rem;font-weight:600;font-family:var(--font-serif);margin:1rem 0;" id="success-order-num"></div>
+      <p style="font-size:0.875rem;">Our team will contact you within 24 hours to confirm delivery details and collect the 50% advance for custom items.</p>
+      <p style="font-size:0.85rem;color:var(--muted-foreground);margin-top:0.5rem;">Reference: info@artisanco.in | +91 731 234 5678</p>
+      <a href="products.html">Continue Shopping</a>
+    </div>
+
+    <div id="payment-form-wrap">
+      <div class="breadcrumb-steps">
+        <a href="cart.html" style="color:inherit;">Cart</a>
+        <span class="sep">›</span>
+        <span class="step active">Payment Details</span>
+        <span class="sep">›</span>
+        <span>Confirmation</span>
+      </div>
+
+      <h1>Payment Details</h1>
+      <p class="sub">All transactions are secure. 50% advance required for made-to-order items.</p>
+
+      <div class="payment-grid">
+        <div>
+          <!-- Contact Info -->
+          <div class="payment-card" style="margin-bottom:1.5rem;">
+            <h3>Contact Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label>First Name</label>
+                <input type="text" id="first-name" placeholder="Rajan" required>
+              </div>
+              <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" id="last-name" placeholder="Sharma" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="email" placeholder="rajan@company.in" required>
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="phone" placeholder="+91 98765 43210" required>
+            </div>
+            <div class="form-group">
+              <label>Company / Organisation (optional)</label>
+              <input type="text" id="company" placeholder="ABC Interiors Pvt. Ltd.">
+            </div>
+          </div>
+
+          <!-- Delivery Address -->
+          <div class="payment-card" style="margin-bottom:1.5rem;">
+            <h3>Delivery Address</h3>
+            <div class="form-group">
+              <label>Address Line 1</label>
+              <input type="text" id="address1" placeholder="Flat / Office No., Building Name" required>
+            </div>
+            <div class="form-group">
+              <label>Address Line 2</label>
+              <input type="text" id="address2" placeholder="Street, Area">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>City</label>
+                <input type="text" id="city" placeholder="Mumbai" required>
+              </div>
+              <div class="form-group">
+                <label>State</label>
+                <select id="state">
+                  <option value="">Select state</option>
+                  <option>Madhya Pradesh</option><option>Maharashtra</option><option>Delhi</option>
+                  <option>Gujarat</option><option>Karnataka</option><option>Tamil Nadu</option>
+                  <option>Rajasthan</option><option>Uttar Pradesh</option><option>West Bengal</option>
+                  <option>Telangana</option><option>Andhra Pradesh</option><option>Haryana</option>
+                  <option>Punjab</option><option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>PIN Code</label>
+                <input type="text" id="pincode" placeholder="400001" maxlength="6" required>
+              </div>
+              <div class="form-group">
+                <label>GSTIN (optional)</label>
+                <input type="text" id="gstin" placeholder="22AAAAA0000A1Z5">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Special Instructions (optional)</label>
+              <textarea id="notes" placeholder="Site access details, preferred delivery time, installation requirements…"></textarea>
+            </div>
+          </div>
+
+          <!-- Payment Method -->
+          <div class="payment-card">
+            <h3>Payment Method</h3>
+            <div class="payment-methods" id="payment-methods">
+              <label class="payment-method-option selected" id="pm-neft">
+                <input type="radio" name="payment" value="neft" checked>
+                <div>
+                  <div class="payment-method-label">RTGS / NEFT / Bank Transfer</div>
+                  <div class="payment-method-desc">Preferred for orders above ₹50,000. Details shared on confirmation.</div>
+                </div>
+              </label>
+              <label class="payment-method-option" id="pm-upi">
+                <input type="radio" name="payment" value="upi">
+                <div>
+                  <div class="payment-method-label">UPI</div>
+                  <div class="payment-method-desc">Pay via any UPI app — Google Pay, PhonePe, Paytm.</div>
+                </div>
+              </label>
+              <label class="payment-method-option" id="pm-cheque">
+                <input type="radio" name="payment" value="cheque">
+                <div>
+                  <div class="payment-method-label">Cheque / DD</div>
+                  <div class="payment-method-desc">Payable to "Artisan & Co.", drawn on any Indian bank.</div>
+                </div>
+              </label>
+              <label class="payment-method-option" id="pm-card">
+                <input type="radio" name="payment" value="card">
+                <div>
+                  <div class="payment-method-label">Credit / Debit Card</div>
+                  <div class="payment-method-desc">Visa, Mastercard, RuPay. 2% surcharge applies.</div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Card fields (only shown when card selected) -->
+            <div class="card-fields" id="card-fields">
+              <div class="form-group">
+                <label>Card Number</label>
+                <input type="text" placeholder="•••• •••• •••• ••••" maxlength="19" id="card-num">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Expiry (MM / YY)</label>
+                  <input type="text" placeholder="MM / YY" maxlength="7" id="card-expiry">
+                </div>
+                <div class="form-group">
+                  <label>CVV</label>
+                  <input type="password" placeholder="•••" maxlength="4" id="card-cvv">
+                </div>
+              </div>
+            </div>
+
+            <div class="trust-badges">
+              <span class="trust-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Secure Checkout</span>
+              <span class="trust-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> SSL Encrypted</span>
+              <span class="trust-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> GST Invoice Provided</span>
+            </div>
+
+            <button class="btn-pay" onclick="submitOrder()">Confirm & Place Order →</button>
+          </div>
+        </div>
+
+        <!-- Order Summary sidebar -->
+        <div class="order-summary-card">
+          <h3>Your Order</h3>
+          <div id="order-items-list"></div>
+          <div class="summary-totals">
+            <div class="summary-row"><span>Subtotal</span><span id="pay-subtotal">₹0</span></div>
+            <div class="summary-row"><span>GST (18%)</span><span id="pay-gst">₹0</span></div>
+            <div class="summary-row"><span>Delivery</span><span>As quoted</span></div>
+            <div class="summary-row grand-total"><span>Total</span><span id="pay-total">₹0</span></div>
+          </div>
+          <p style="font-size:0.75rem;color:var(--muted-foreground);margin-top:1rem;">50% advance required for made-to-order items. Balance due before dispatch.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('header-placeholder').innerHTML = createHeader('payment.html');
+    document.getElementById('footer-placeholder').innerHTML = createFooter();
+    initHamburger();
+
+    // Redirect if cart empty
+    const cart = getCart();
+    if (!cart.length) window.location.href = 'cart.html';
+
+    // Render order items
+    const list = document.getElementById('order-items-list');
+    list.innerHTML = cart.map(item => `
+      <div class="summary-item">
+        <span>${item.name} × ${item.qty}</span>
+        <span>${formatPrice((item.price || 0) * item.qty)}</span>
+      </div>`).join('');
+    const subtotal = getCartTotal();
+    const gst = Math.round(subtotal * 0.18);
+    document.getElementById('pay-subtotal').textContent = formatPrice(subtotal);
+    document.getElementById('pay-gst').textContent = formatPrice(gst);
+    document.getElementById('pay-total').textContent = formatPrice(subtotal + gst);
+
+    // Pre-fill from user profile
+    const user = typeof getUser === 'function' ? getUser() : null;
+    if (user) {
+      if (user.name) {
+        const parts = user.name.split(' ');
+        document.getElementById('first-name').value = parts[0] || '';
+        document.getElementById('last-name').value = parts.slice(1).join(' ') || '';
+      }
+      if (user.email) document.getElementById('email').value = user.email;
+    }
+
+    // Payment method selection
+    document.querySelectorAll('.payment-method-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        document.querySelectorAll('.payment-method-option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        const val = opt.querySelector('input').value;
+        document.getElementById('card-fields').classList.toggle('visible', val === 'card');
+      });
+    });
+
+    // Format card number
+    document.getElementById('card-num')?.addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g,'').substring(0,16);
+      e.target.value = v.match(/.{1,4}/g)?.join(' ') || v;
+    });
+
+    function validateForm() {
+      const required = ['first-name','last-name','email','phone','address1','city','state','pincode'];
+      for (const id of required) {
+        const el = document.getElementById(id);
+        if (!el.value.trim()) { el.focus(); el.style.borderColor='#c0392b'; showToast('Please fill in all required fields.', 'error'); return false; }
+        el.style.borderColor='';
+      }
+      const selectedPayment = document.querySelector('input[name="payment"]:checked')?.value;
+      if (selectedPayment === 'card') {
+        const num = document.getElementById('card-num')?.value.replace(/\s/g,'');
+        if (!num || num.length < 15) { showToast('Please enter a valid card number.', 'error'); return false; }
+      }
+      return true;
+    }
+
+    function submitOrder() {
+      if (!validateForm()) return;
+      const orderId = 'AC-' + Date.now().toString().slice(-8);
+      const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value || 'neft';
+      const orderData = {
+        id: orderId,
+        items: cart,
+        total: getCartTotal(),
+        date: new Date().toISOString(),
+        customer: {
+          name: document.getElementById('first-name').value + ' ' + document.getElementById('last-name').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+          company: document.getElementById('company').value,
+          address: `${document.getElementById('address1').value}, ${document.getElementById('address2').value}, ${document.getElementById('city').value} - ${document.getElementById('pincode').value}`,
+          state: document.getElementById('state').value,
+          gstin: document.getElementById('gstin').value,
+          notes: document.getElementById('notes').value,
+        },
+        paymentMethod,
+        status: 'Confirmed'
+      };
+      localStorage.setItem('artisan_last_order', JSON.stringify(orderData));
+      const existingOrders = JSON.parse(localStorage.getItem('artisan_orders') || '[]');
+      existingOrders.unshift(orderData);
+      localStorage.setItem('artisan_orders', JSON.stringify(existingOrders));
+      saveCart([]);
+      document.getElementById('payment-form-wrap').style.display = 'none';
+      document.getElementById('success-screen').style.display = 'block';
+      document.getElementById('success-order-num').textContent = 'Order # ' + orderId;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

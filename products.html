@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .filter-group-btn { display:inline-flex; align-items:center; padding:0.35rem 0.75rem; border:1.5px solid var(--border); border-radius:20px; background:var(--card); font-size:0.78rem; cursor:pointer; transition:all 0.15s; color:var(--foreground); margin:0.2rem 0.2rem 0.2rem 0; white-space:nowrap; }
+    .filter-group-btn.active, .filter-group-btn:hover { background:var(--foreground); color:var(--primary-foreground); border-color:var(--foreground); }
+    .filter-group-wrap { display:flex; flex-wrap:wrap; gap:0; margin-top:0.4rem; }
+    .sidebar-filter-label { font-size:0.75rem; color:var(--muted-foreground); letter-spacing:0.07em; font-weight:600; text-transform:uppercase; margin-bottom:0.35rem; margin-top:1rem; display:block; }
+    .sidebar-filter-label:first-child { margin-top:0; }
+    #btn-clear-filters { display:none; align-items:center; gap:0.35rem; padding:0.4rem 0.9rem; background:none; border:1.5px solid var(--border); border-radius:6px; font-size:0.8rem; cursor:pointer; color:var(--muted-foreground); transition:all 0.15s; margin-top:0.75rem; }
+    #btn-clear-filters:hover { background:var(--foreground); color:var(--primary-foreground); border-color:var(--foreground); }
+    .sidebar-divider { border:none; border-top:1px solid var(--border); margin:1rem 0; }
+  </style>
+</head>
+<body>
+
+  <div id="header-placeholder"></div>
+
+  <!-- Page hero -->
+  <section class="page-hero">
+    <div class="page-hero-bg">
+      <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=2000" alt="Complete Catalogue">
+    </div>
+    <div class="page-hero-overlay"></div>
+    <div class="container page-hero-content">
+      <nav class="page-breadcrumb">HOME / <span>PRODUCTS</span></nav>
+      <h1>Complete Catalogue</h1>
+      <p class="page-hero-sub">Browse our entire collection of premium furniture designed for commercial, hospitality, healthcare and outdoor spaces.</p>
+    </div>
+  </section>
+
+  <!-- Catalogue layout -->
+  <section class="catalogue-section">
+    <div class="catalogue-container">
+      <!-- Sidebar -->
+      <aside class="catalogue-sidebar">
+        <div class="sidebar-search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="sidebar-search-input" placeholder="Search products...">
+        </div>
+
+        <div class="sidebar-section">
+          <p class="sidebar-label">SORT BY</p>
+          <div class="sidebar-sort" id="sidebar-sort">
+            <button class="sort-btn active" data-sort="featured">Featured</button>
+            <button class="sort-btn" data-sort="trending">Trending</button>
+            <button class="sort-btn" data-sort="az">Name A–Z</button>
+            <button class="sort-btn" data-sort="za">Name Z–A</button>
+            <button class="sort-btn" data-sort="price-asc">Price ↑</button>
+            <button class="sort-btn" data-sort="price-desc">Price ↓</button>
+          </div>
+        </div>
+
+        <hr class="sidebar-divider">
+
+        <!-- Colour / Finish Filter -->
+        <div class="sidebar-section" id="sidebar-finish">
+          <p class="sidebar-label">COLOUR / FINISH</p>
+          <div class="filter-group-wrap">
+            <button class="filter-group-btn active" data-finish="all">All</button>
+            <button class="filter-group-btn" data-finish="wood">
+              <span style="display:inline-block;width:10px;height:10px;background:#8B6340;border-radius:50%;margin-right:5px;"></span>Wood
+            </button>
+            <button class="filter-group-btn" data-finish="metal">
+              <span style="display:inline-block;width:10px;height:10px;background:#9b9b9b;border-radius:50%;margin-right:5px;"></span>Metal / Steel
+            </button>
+            <button class="filter-group-btn" data-finish="upholstered">
+              <span style="display:inline-block;width:10px;height:10px;background:#c9b8a4;border-radius:50%;margin-right:5px;"></span>Upholstered
+            </button>
+            <button class="filter-group-btn" data-finish="leather">
+              <span style="display:inline-block;width:10px;height:10px;background:#5a3e2b;border-radius:50%;margin-right:5px;"></span>Leather
+            </button>
+            <button class="filter-group-btn" data-finish="marble">
+              <span style="display:inline-block;width:10px;height:10px;background:#e8e0d5;border:1px solid #ccc;border-radius:50%;margin-right:5px;"></span>Marble / Stone
+            </button>
+          </div>
+        </div>
+
+        <!-- Price Range Filter -->
+        <div class="sidebar-section" id="sidebar-price">
+          <p class="sidebar-label">PRICE RANGE</p>
+          <div class="filter-group-wrap">
+            <button class="filter-group-btn active" data-price="all">All Prices</button>
+            <button class="filter-group-btn" data-price="under25">Under ₹25K</button>
+            <button class="filter-group-btn" data-price="25to75">₹25K – ₹75K</button>
+            <button class="filter-group-btn" data-price="75to200">₹75K – ₹2L</button>
+            <button class="filter-group-btn" data-price="above200">Above ₹2L</button>
+          </div>
+        </div>
+
+        <!-- Material Type Filter -->
+        <div class="sidebar-section" id="sidebar-material">
+          <p class="sidebar-label">MATERIAL TYPE</p>
+          <div class="filter-group-wrap">
+            <button class="filter-group-btn active" data-material="all">All</button>
+            <button class="filter-group-btn" data-material="wood">Solid Wood</button>
+            <button class="filter-group-btn" data-material="metal">Metal</button>
+            <button class="filter-group-btn" data-material="fabric">Fabric / Mesh</button>
+            <button class="filter-group-btn" data-material="leather">Leather</button>
+            <button class="filter-group-btn" data-material="marble">Marble / Stone</button>
+            <button class="filter-group-btn" data-material="plastic">Polypropylene</button>
+          </div>
+        </div>
+
+        <button id="btn-clear-filters">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Clear All Filters
+        </button>
+
+        <hr class="sidebar-divider">
+
+        <div class="sidebar-section">
+          <p class="sidebar-label">CATEGORIES</p>
+          <div class="sidebar-cats" id="sidebar-cats"></div>
+        </div>
+      </aside>
+
+      <!-- Main grid -->
+      <main class="catalogue-main">
+        <div class="catalogue-header">
+          <p id="products-count" class="catalogue-count">Showing <strong>100</strong> products</p>
+        </div>
+        <div class="products-grid catalogue-grid" id="products-grid"></div>
+        <p id="no-products" style="display:none;text-align:center;padding:4rem 0;color:var(--muted-foreground);">No products match the selected filters. <a href="#" onclick="document.getElementById('btn-clear-filters').click();return false;" style="color:var(--foreground);text-decoration:underline;">Clear filters</a></p>
+      </main>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" style="margin-top:0;">
+    <div class="container">
+      <p class="section-eyebrow" style="text-align:center;">Custom Orders Welcome</p>
+      <h2>Can't find what you need?</h2>
+      <p>Every product can be customised — dimensions, materials, finishes. Tell us about your project and we'll specify the right solution.</p>
+      <a href="quote-builder.html" class="btn-dark">BUILD A QUOTE</a>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

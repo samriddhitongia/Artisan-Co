@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMS Admin — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    :root { --admin-sidebar: 220px; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: var(--font-sans, system-ui, sans-serif); background:#f4f4f2; color:#1a1a1a; }
+
+    /* ── Layout ── */
+    .cms-layout { display:grid; grid-template-columns: var(--admin-sidebar) 1fr; min-height:100vh; }
+    .cms-sidebar {
+      background:#1a1a1a; color:#e0ddd8; padding:0;
+      position:sticky; top:0; height:100vh; overflow-y:auto;
+      display:flex; flex-direction:column;
+    }
+    .cms-main { overflow-x:hidden; }
+
+    /* ── Sidebar ── */
+    .cms-brand { padding:1.5rem 1.25rem 1rem; border-bottom:1px solid rgba(255,255,255,0.1); }
+    .cms-brand-name { font-family: Georgia, serif; font-size:1.1rem; font-weight:600; }
+    .cms-brand-sub  { font-size:0.7rem; color:#888; margin-top:0.15rem; text-transform:uppercase; letter-spacing:0.1em; }
+    .cms-nav { padding:1rem 0; flex:1; }
+    .cms-nav-section { padding:0.5rem 1.25rem 0.25rem; font-size:0.65rem; font-weight:600;
+      text-transform:uppercase; letter-spacing:0.12em; color:#666; }
+    .cms-nav a {
+      display:flex; align-items:center; gap:0.6rem; padding:0.55rem 1.25rem;
+      color:#c0bdb8; text-decoration:none; font-size:0.85rem; transition:all 0.15s; cursor:pointer;
+    }
+    .cms-nav a:hover { color:#fff; background:rgba(255,255,255,0.06); }
+    .cms-nav a.active { color:#fff; background:rgba(255,255,255,0.12); border-left:2px solid #c8a96e; }
+    .cms-nav a svg { width:14px; height:14px; flex-shrink:0; opacity:0.7; }
+    .cms-nav a.active svg { opacity:1; }
+    .cms-nav-badge {
+      margin-left:auto; background:#c8a96e; color:#1a1a1a; font-size:0.65rem;
+      font-weight:700; padding:1px 5px; border-radius:99px;
+    }
+    .cms-user-bar { padding:1rem 1.25rem; border-top:1px solid rgba(255,255,255,0.1); font-size:0.8rem; color:#888; }
+    .cms-user-name { color:#ddd; font-weight:500; }
+
+    /* ── Top bar ── */
+    .cms-topbar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 1.75rem; background:#fff; border-bottom:1px solid #e8e5e0;
+      position:sticky; top:0; z-index:10;
+    }
+    .cms-page-title { font-size:1.15rem; font-weight:600; }
+    .cms-topbar-actions { display:flex; gap:0.75rem; align-items:center; }
+
+    /* ── Panels ── */
+    .cms-panel { display:none; padding:1.75rem; }
+    .cms-panel.active { display:block; }
+
+    /* ── Stats cards ── */
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-bottom:1.75rem; }
+    .stat-card { background:#fff; border:1px solid #e8e5e0; border-radius:10px; padding:1.25rem; }
+    .stat-card-label { font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:0.08em; }
+    .stat-card-value { font-size:2rem; font-weight:700; margin:0.25rem 0; font-family:Georgia,serif; }
+    .stat-card-sub   { font-size:0.75rem; color:#aaa; }
+
+    /* ── Tables ── */
+    .cms-table-wrap { background:#fff; border:1px solid #e8e5e0; border-radius:10px; overflow:hidden; }
+    .cms-table-header { display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 1.25rem; border-bottom:1px solid #e8e5e0; }
+    .cms-table-title { font-weight:600; font-size:0.95rem; }
+    table { width:100%; border-collapse:collapse; }
+    th { padding:0.75rem 1rem; text-align:left; font-size:0.72rem; font-weight:600; color:#888;
+      text-transform:uppercase; letter-spacing:0.08em; border-bottom:1px solid #e8e5e0; background:#fafaf8; }
+    td { padding:0.75rem 1rem; font-size:0.85rem; border-bottom:1px solid #f0ede8; vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:#fafaf8; }
+    .td-img { width:40px; height:40px; object-fit:cover; border-radius:5px; display:block; }
+    .td-badge { display:inline-block; padding:2px 8px; border-radius:99px; font-size:0.72rem; font-weight:600; }
+    .badge-active   { background:#e8f5e9; color:#2e7d32; }
+    .badge-draft    { background:#fff3e0; color:#e65100; }
+    .badge-archived { background:#fce4ec; color:#c62828; }
+    .badge-featured { background:#e8f0fd; color:#1a56db; }
+    .badge-admin    { background:#ede7f6; color:#4527a0; }
+    .badge-customer { background:#e0f2f1; color:#00695c; }
+    .td-actions { display:flex; gap:0.4rem; }
+    .btn-action { padding:4px 10px; border:1px solid #e8e5e0; background:#fff; border-radius:5px;
+      font-size:0.75rem; cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+    .btn-action:hover { background:#f4f4f2; }
+    .btn-action.danger { border-color:#f5c6c6; color:#c62828; }
+    .btn-action.danger:hover { background:#fff5f5; }
+    .btn-action.primary { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
+    .btn-action.primary:hover { background:#333; }
+
+    /* ── Search/filter bar ── */
+    .cms-filters { display:flex; gap:0.75rem; align-items:center; padding:0.75rem 1.25rem; border-bottom:1px solid #e8e5e0; }
+    .cms-search { flex:1; max-width:320px; padding:0.55rem 0.9rem; border:1.5px solid #e8e5e0;
+      border-radius:7px; font-size:0.85rem; outline:none; background:#fafaf8; }
+    .cms-search:focus { border-color:#1a1a1a; background:#fff; }
+    .cms-filter-select { padding:0.5rem 0.75rem; border:1.5px solid #e8e5e0; border-radius:7px;
+      font-size:0.82rem; background:#fafaf8; cursor:pointer; outline:none; }
+
+    /* ── Buttons ── */
+    .btn-primary { padding:0.55rem 1.1rem; background:#1a1a1a; color:#fff; border:none;
+      border-radius:7px; font-size:0.85rem; cursor:pointer; transition:opacity 0.15s; font-weight:500; }
+    .btn-primary:hover { opacity:0.85; }
+    .btn-secondary { padding:0.5rem 1rem; background:#fff; color:#1a1a1a; border:1.5px solid #e8e5e0;
+      border-radius:7px; font-size:0.85rem; cursor:pointer; transition:all 0.15s; font-weight:500; }
+    .btn-secondary:hover { background:#f4f4f2; }
+    .btn-gold { padding:0.55rem 1.1rem; background:#c8a96e; color:#fff; border:none;
+      border-radius:7px; font-size:0.85rem; cursor:pointer; font-weight:500; }
+    .btn-danger { padding:0.5rem 1rem; background:#c62828; color:#fff; border:none;
+      border-radius:7px; font-size:0.85rem; cursor:pointer; font-weight:500; }
+
+    /* ── Modal / Drawer ── */
+    .cms-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:100;
+      align-items:center; justify-content:center; }
+    .cms-modal-overlay.open { display:flex; }
+    .cms-modal { background:#fff; border-radius:12px; padding:0; width:min(680px,95vw);
+      max-height:90vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,0.2); }
+    .cms-modal-header { padding:1.25rem 1.5rem; border-bottom:1px solid #e8e5e0;
+      display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:#fff; z-index:1; }
+    .cms-modal-title { font-weight:600; font-size:1rem; }
+    .cms-modal-close { background:none; border:none; cursor:pointer; font-size:1.2rem; color:#888; line-height:1; }
+    .cms-modal-body { padding:1.5rem; }
+    .cms-modal-footer { padding:1rem 1.5rem; border-top:1px solid #e8e5e0; display:flex; gap:0.75rem; justify-content:flex-end; }
+
+    /* ── Form elements ── */
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
+    .form-row.single { grid-template-columns:1fr; }
+    .form-group { margin-bottom:1rem; }
+    .form-label { display:block; font-size:0.75rem; font-weight:600; color:#555; margin-bottom:0.35rem;
+      text-transform:uppercase; letter-spacing:0.06em; }
+    .form-input, .form-select, .form-textarea {
+      width:100%; padding:0.6rem 0.85rem; border:1.5px solid #e8e5e0;
+      border-radius:7px; font-size:0.875rem; background:#fafaf8; color:#1a1a1a; outline:none;
+      transition:border-color 0.15s, box-shadow 0.15s; font-family:inherit;
+    }
+    .form-textarea { resize:vertical; min-height:90px; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color:#1a1a1a; background:#fff; box-shadow:0 0 0 3px rgba(0,0,0,0.05);
+    }
+    .form-hint { font-size:0.72rem; color:#aaa; margin-top:0.25rem; }
+    .form-check-row { display:flex; align-items:center; gap:0.5rem; }
+    .form-check-row input { width:16px; height:16px; accent-color:#1a1a1a; cursor:pointer; }
+
+    /* ── Alerts ── */
+    .cms-alert { padding:0.75rem 1rem; border-radius:7px; font-size:0.85rem; margin-bottom:1rem; }
+    .cms-alert.success { background:#e8f5e9; color:#1b5e20; border:1px solid #c8e6c9; }
+    .cms-alert.error   { background:#fce4ec; color:#880e4f; border:1px solid #f8bbd0; }
+    .cms-alert.info    { background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb; }
+    .cms-alert.warning { background:#fff8e1; color:#e65100; border:1px solid #ffe082; }
+
+    /* ── Loading ── */
+    .cms-loading { display:flex; align-items:center; justify-content:center; gap:0.75rem;
+      padding:3rem; color:#888; font-size:0.9rem; }
+    .spinner { width:18px; height:18px; border:2px solid #e8e5e0; border-top-color:#1a1a1a;
+      border-radius:50%; animation:spin 0.7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── Setup wizard ── */
+    .setup-card { background:#fff; border:1px solid #e8e5e0; border-radius:12px; padding:2rem; max-width:640px; }
+    .setup-step { display:flex; gap:1rem; align-items:flex-start; margin-bottom:1.5rem; }
+    .step-num { width:28px; height:28px; background:#1a1a1a; color:#fff; border-radius:50%;
+      display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; flex-shrink:0; }
+    .step-content h4 { margin:0 0 0.35rem; font-size:0.9rem; }
+    .step-content p  { margin:0; font-size:0.82rem; color:#666; line-height:1.5; }
+    .step-content code { background:#f4f4f2; padding:2px 6px; border-radius:4px; font-size:0.8rem; }
+    code.block { display:block; background:#1a1a1a; color:#e8d5b0; padding:0.75rem 1rem;
+      border-radius:7px; margin-top:0.5rem; font-size:0.78rem; white-space:pre; overflow-x:auto; }
+
+    /* ── Sync status ── */
+    .sync-status { display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; color:#888; }
+    .sync-dot { width:7px; height:7px; border-radius:50%; background:#4caf50; flex-shrink:0; }
+    .sync-dot.offline { background:#f44336; }
+    .sync-dot.syncing { background:#ff9800; animation:pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── Seed panel ── */
+    .seed-log { background:#1a1a1a; color:#c8d8b0; font-size:0.8rem; padding:1rem; border-radius:7px;
+      font-family:monospace; max-height:280px; overflow-y:auto; line-height:1.7; margin-top:1rem; }
+
+    /* ── Responsive ── */
+    @media(max-width:768px){
+      .cms-layout { grid-template-columns:1fr; }
+      .cms-sidebar { display:none; }
+      .form-row { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="cms-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="cms-sidebar">
+    <div class="cms-brand">
+      <div class="cms-brand-name">Artisan & Co.</div>
+      <div class="cms-brand-sub">CMS Admin</div>
+    </div>
+    <nav class="cms-nav">
+      <div class="cms-nav-section">Overview</div>
+      <a onclick="showPanel('dashboard')" class="active" id="nav-dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+
+      <div class="cms-nav-section">Catalogue</div>
+      <a onclick="showPanel('products')" id="nav-products">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        Products
+      </a>
+      <a onclick="showPanel('projects')" id="nav-projects">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        Projects
+      </a>
+      <a onclick="showPanel('categories')" id="nav-categories">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+        Categories
+      </a>
+
+      <div class="cms-nav-section">Customers</div>
+      <a onclick="showPanel('users')" id="nav-users">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Users
+      </a>
+      <a onclick="showPanel('enquiries')" id="nav-enquiries">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Enquiries
+        <span class="cms-nav-badge" id="enquiry-badge" style="display:none">0</span>
+      </a>
+
+      <div class="cms-nav-section">Configuration</div>
+      <a onclick="showPanel('settings')" id="nav-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Site Settings
+      </a>
+      <a onclick="showPanel('setup')" id="nav-setup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Sheets Setup
+      </a>
+    </nav>
+    <div class="cms-user-bar">
+      Logged in as<br><span class="cms-user-name" id="sidebar-user">—</span>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="cms-main">
+
+    <!-- Top bar -->
+    <div class="cms-topbar">
+      <span class="cms-page-title" id="page-title">Dashboard</span>
+      <div class="cms-topbar-actions">
+        <div class="sync-status">
+          <span class="sync-dot" id="sync-dot"></span>
+          <span id="sync-label">Checking…</span>
+        </div>
+        <a href="index.html" class="btn-secondary" style="font-size:0.78rem;">← View Site</a>
+      </div>
+    </div>
+
+    <!-- ══ DASHBOARD ════════════════════════════════════════════ -->
+    <div class="cms-panel active" id="panel-dashboard">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-card-label">Products</div><div class="stat-card-value" id="stat-products">—</div><div class="stat-card-sub">in catalogue</div></div>
+        <div class="stat-card"><div class="stat-card-label">Projects</div><div class="stat-card-value" id="stat-projects">—</div><div class="stat-card-sub">completed</div></div>
+        <div class="stat-card"><div class="stat-card-label">Categories</div><div class="stat-card-value" id="stat-categories">—</div><div class="stat-card-sub">product lines</div></div>
+        <div class="stat-card"><div class="stat-card-label">Users</div><div class="stat-card-value" id="stat-users">—</div><div class="stat-card-sub">registered accounts</div></div>
+        <div class="stat-card"><div class="stat-card-label">Enquiries</div><div class="stat-card-value" id="stat-enquiries">—</div><div class="stat-card-sub">total received</div></div>
+        <div class="stat-card"><div class="stat-card-label">New Enquiries</div><div class="stat-card-value" id="stat-new-enq" style="color:#c8a96e">—</div><div class="stat-card-sub">awaiting response</div></div>
+      </div>
+      <div id="dash-alert"></div>
+      <div class="cms-table-wrap">
+        <div class="cms-table-header">
+          <span class="cms-table-title">Recent Enquiries</span>
+          <button class="btn-secondary" onclick="showPanel('enquiries')" style="font-size:0.8rem">View All</button>
+        </div>
+        <div id="recent-enquiries-table"><div class="cms-loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ══ PRODUCTS ═════════════════════════════════════════════ -->
+    <div class="cms-panel" id="panel-products">
+      <div class="cms-table-wrap">
+        <div class="cms-table-header">
+          <span class="cms-table-title">All Products</span>
+          <button class="btn-primary" onclick="openProductModal()">+ Add Product</button>
+        </div>
+        <div class="cms-filters">
+          <input class="cms-search" id="product-search" placeholder="Search products…" oninput="renderProductsTable()">
+          <select class="cms-filter-select" id="product-cat-filter" onchange="renderProductsTable()">
+            <option value="">All Categories</option>
+          </select>
+          <select class="cms-filter-select" id="product-status-filter" onchange="renderProductsTable()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="draft">Draft</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+        <div id="products-table-body"><div class="cms-loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ══ PROJECTS ══════════════════════════════════════════════ -->
+    <div class="cms-panel" id="panel-projects">
+      <div class="cms-table-wrap">
+        <div class="cms-table-header">
+          <span class="cms-table-title">All Projects</span>
+          <button class="btn-primary" onclick="openProjectModal()">+ Add Project</button>
+        </div>
+        <div class="cms-filters">
+          <input class="cms-search" id="project-search" placeholder="Search projects…" oninput="renderProjectsTable()">
+          <select class="cms-filter-select" id="project-industry-filter" onchange="renderProjectsTable()">
+            <option value="">All Industries</option>
+          </select>
+        </div>
+        <div id="projects-table-body"><div class="cms-loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ══ CATEGORIES ════════════════════════════════════════════ -->
+    <div class="cms-panel" id="panel-categories">
+      <div class="cms-table-wrap">
+        <div class="cms-table-header">
+          <span class="cms-table-title">Product Categories</span>
+          <button class="btn-primary" onclick="openCategoryModal()">+ Add Category</button>
+        </div>
+        <div id="categories-table-body"><div class="cms-loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ══ USERS ═════════════════════════════════════════════════ -->
+    <div class="cms-panel" id="panel-users">
+      <div class="cms-table-wrap">
+        <div class="cms-table-header">
+          <span class="cms-table-title">Registered Users</span>
+          <button class="btn-primary" onclick="openUserModal()">+ Add User</button>
+        </div>
+        <div class="cms-filters">
+          <input class="cms-search" id="user-search" placeholder="Search users…" oninput="renderUsersTable()">
+        </div>
+        <div id="users-table-body"><div class="cms-loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ══ ENQUIRIES ═════════════════════════════════════════════ -->
+    <div class="cms-panel" id="panel-enquiries">
+      <div class="cms-table-wrap">
+        <div class="cms-table-header">
+          <span class="cms-table-title">All Enquiries</span>
+          <div style="display:flex;gap:0.5rem;">
+            <button class="btn-secondary" onclick="loadEnquiries()" style="font-size:0.8rem;">↺ Refresh</button>
+          </div>
+        </div>
+        <div class="cms-filters">
+          <input class="cms-search" id="enq-search" placeholder="Search enquiries…" oninput="renderEnquiriesTable()">
+          <select class="cms-filter-select" id="enq-status-filter" onchange="renderEnquiriesTable()">
+            <option value="">All Status</option>
+            <option value="new">New</option>
+            <option value="in_progress">In Progress</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div id="enquiries-table-body"><div class="cms-loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══════════════════════════════════════════════ -->
+    <div class="cms-panel" id="panel-settings">
+      <div style="max-width:640px;">
+        <div id="settings-form-body"><div class="cms-loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ══ SETUP ═════════════════════════════════════════════════ -->
+    <div class="cms-panel" id="panel-setup">
+      <div class="setup-card">
+        <h3 style="margin:0 0 0.25rem;font-family:Georgia,serif;">Google Sheets Setup</h3>
+        <p style="color:#888;font-size:0.85rem;margin-bottom:1.5rem;">Connect this website to a Google Spreadsheet as a CMS backend.</p>
+
+        <div class="setup-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>Create a Google Cloud Project</h4>
+            <p>Go to <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a>, create a new project, and enable the <strong>Google Sheets API</strong>.</p>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>Create a Service Account</h4>
+            <p>In IAM & Admin → Service Accounts, create an account with role <code>Editor</code>. Under Keys, create a new JSON key and download it.</p>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>Create a Spreadsheet</h4>
+            <p>Create a new Google Sheet with 6 tabs named exactly:<br>
+            <code>Products</code> · <code>Projects</code> · <code>Categories</code> · <code>Settings</code> · <code>Users</code> · <code>Enquiries</code><br>
+            Share it with your service account email (Editor access).</p>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h4>Configure <code>js/sheets-cms.js</code></h4>
+            <p>Open the file and fill in <code>SHEETS_CONFIG</code>:</p>
+            <code class="block">SPREADSHEET_ID: 'your-spreadsheet-id',
+SERVICE_ACCOUNT: {
+  client_email: 'xxx@your-project.iam.gserviceaccount.com',
+  private_key:  '-----BEGIN RSA PRIVATE KEY-----\n...',
+}</code>
+            <p style="margin-top:0.5rem;color:#c00">⚠ Never commit your private key to a public repo. Use environment variables in production.</p>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <h4>Initialise headers & seed data</h4>
+            <p>Click the button below. It will write column headers to all tabs, then push all 100 products, 20 projects, categories and default settings into the sheet.</p>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem;">
+          <button class="btn-gold" onclick="runInit()">① Write Headers</button>
+          <button class="btn-primary" onclick="runSeed()">② Seed All Data →</button>
+          <button class="btn-secondary" onclick="testConnection()">Test Connection</button>
+        </div>
+        <div id="seed-log" class="seed-log" style="display:none;"></div>
+        <div id="setup-alert" style="margin-top:1rem;"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ PRODUCT MODAL ═══════════════════════════════════════════ -->
+<div class="cms-modal-overlay" id="product-modal">
+  <div class="cms-modal">
+    <div class="cms-modal-header">
+      <span class="cms-modal-title" id="product-modal-title">Add Product</span>
+      <button class="cms-modal-close" onclick="closeModal('product-modal')">×</button>
+    </div>
+    <div class="cms-modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Product Name *</label>
+          <input class="form-input" id="pm-name" placeholder="Cambridge Executive Chair">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Slug *</label>
+          <input class="form-input" id="pm-slug" placeholder="cambridge-executive-chair">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category *</label>
+          <select class="form-select" id="pm-category"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="pm-status">
+            <option value="active">Active</option>
+            <option value="draft">Draft</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Short Description</label>
+        <input class="form-input" id="pm-short-desc" placeholder="One-line summary for product cards">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full Description</label>
+        <textarea class="form-textarea" id="pm-description" rows="4" placeholder="Detailed product description…"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Material</label>
+          <input class="form-input" id="pm-material" placeholder="Full-grain leather, aluminium base">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dimensions</label>
+          <input class="form-input" id="pm-dimensions" placeholder="W68 × D72 × H115 cm">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Availability</label>
+          <input class="form-input" id="pm-availability" placeholder="In stock · 1–2 weeks">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price (₹)</label>
+          <input class="form-input" type="number" id="pm-price" placeholder="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Image URLs <span style="font-weight:400;color:#aaa">(separate with |)</span></label>
+        <textarea class="form-textarea" id="pm-images" rows="2" placeholder="https://images.unsplash.com/… | https://…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Finishes <span style="font-weight:400;color:#aaa">(separate with |)</span></label>
+        <input class="form-input" id="pm-finishes" placeholder="Cognac Leather | Midnight Black | Ivory Cream">
+      </div>
+      <div class="form-check-row">
+        <input type="checkbox" id="pm-featured">
+        <label for="pm-featured" style="font-size:0.85rem;cursor:pointer;">Featured product (shows on homepage)</label>
+      </div>
+      <input type="hidden" id="pm-id">
+    </div>
+    <div class="cms-modal-footer">
+      <button class="btn-secondary" onclick="closeModal('product-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveProduct()">Save to Sheets</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROJECT MODAL ══════════════════════════════════════════ -->
+<div class="cms-modal-overlay" id="project-modal">
+  <div class="cms-modal">
+    <div class="cms-modal-header">
+      <span class="cms-modal-title" id="project-modal-title">Add Project</span>
+      <button class="cms-modal-close" onclick="closeModal('project-modal')">×</button>
+    </div>
+    <div class="cms-modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="prm-title" placeholder="Axis Bank Headquarters"></div>
+        <div class="form-group"><label class="form-label">Slug *</label><input class="form-input" id="prm-slug" placeholder="axis-bank-hq"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="prm-location" placeholder="Vijay Nagar, Indore"></div>
+        <div class="form-group"><label class="form-label">Industry</label>
+          <select class="form-select" id="prm-industry">
+            <option>Finance</option><option>Hospitality</option><option>Technology</option>
+            <option>Healthcare</option><option>Education</option><option>Civic</option><option>Residential</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Completion Year</label><input class="form-input" id="prm-year" placeholder="2024"></div>
+        <div class="form-group"><label class="form-label">Area</label><input class="form-input" id="prm-area" placeholder="4,20,000 sq ft"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Summary / Description</label><textarea class="form-textarea" id="prm-description" rows="3"></textarea></div>
+      <div class="form-group"><label class="form-label">Scope of Work</label><textarea class="form-textarea" id="prm-scope" rows="3"></textarea></div>
+      <div class="form-group"><label class="form-label">Challenge</label><textarea class="form-textarea" id="prm-challenge" rows="2"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Client Testimonial</label><textarea class="form-textarea" id="prm-testimonial" rows="3"></textarea></div>
+        <div class="form-group"><label class="form-label">Client Name / Title</label><input class="form-input" id="prm-client-name" placeholder="Head of Real Estate, Axis Bank"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Timeline</label><input class="form-input" id="prm-timeline" placeholder="14 months"></div>
+        <div class="form-group"><label class="form-label">Furniture Pieces</label><input class="form-input" id="prm-pieces" placeholder="2,800 workstations · …"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Hero Image URL</label><input class="form-input" id="prm-image" placeholder="https://images.unsplash.com/…"></div>
+      <div class="form-group"><label class="form-label">Second Image URL</label><input class="form-input" id="prm-image2"></div>
+      <div class="form-group"><label class="form-label">Product Slugs <span style="font-weight:400;color:#aaa">(| separated)</span></label><input class="form-input" id="prm-products" placeholder="bandra-workstation-system | cambridge-executive-chair"></div>
+      <div class="form-check-row">
+        <input type="checkbox" id="prm-featured">
+        <label for="prm-featured" style="font-size:0.85rem;cursor:pointer;">Featured project</label>
+      </div>
+      <input type="hidden" id="prm-id">
+    </div>
+    <div class="cms-modal-footer">
+      <button class="btn-secondary" onclick="closeModal('project-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveProject()">Save to Sheets</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CATEGORY MODAL ════════════════════════════════════════ -->
+<div class="cms-modal-overlay" id="category-modal">
+  <div class="cms-modal" style="max-width:480px;">
+    <div class="cms-modal-header">
+      <span class="cms-modal-title">Category</span>
+      <button class="cms-modal-close" onclick="closeModal('category-modal')">×</button>
+    </div>
+    <div class="cms-modal-body">
+      <div class="form-group"><label class="form-label">ID / Slug *</label><input class="form-input" id="cm-id-field" placeholder="lounge-chairs"></div>
+      <div class="form-group"><label class="form-label">Name *</label><input class="form-input" id="cm-name" placeholder="Lounge Chairs"></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="cm-description" rows="2"></textarea></div>
+      <div class="form-group"><label class="form-label">Hero Image URL</label><input class="form-input" id="cm-hero"></div>
+      <div class="form-group"><label class="form-label">Display Order</label><input class="form-input" type="number" id="cm-order" value="99"></div>
+      <input type="hidden" id="cm-original-id">
+    </div>
+    <div class="cms-modal-footer">
+      <button class="btn-secondary" onclick="closeModal('category-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveCategory()">Save to Sheets</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ USER MODAL ════════════════════════════════════════════ -->
+<div class="cms-modal-overlay" id="user-modal">
+  <div class="cms-modal" style="max-width:480px;">
+    <div class="cms-modal-header">
+      <span class="cms-modal-title" id="user-modal-title">Add User</span>
+      <button class="cms-modal-close" onclick="closeModal('user-modal')">×</button>
+    </div>
+    <div class="cms-modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="um-name"></div>
+        <div class="form-group"><label class="form-label">Email *</label><input class="form-input" type="email" id="um-email"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Password *</label><input class="form-input" type="password" id="um-password" placeholder="Min 6 characters"></div>
+        <div class="form-group"><label class="form-label">Role</label>
+          <select class="form-select" id="um-role"><option value="customer">Customer</option><option value="admin">Admin</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="um-phone"></div>
+        <div class="form-group"><label class="form-label">Company</label><input class="form-input" id="um-company"></div>
+      </div>
+    </div>
+    <div class="cms-modal-footer">
+      <button class="btn-secondary" onclick="closeModal('user-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveUser()">Create User in Sheets</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Scripts ─────────────────────────────────────────────── -->
+<script src="js/data.js"></script>
+<script src="js/prices.js"></script>
+<script src="js/store.js"></script>
+<script src="js/sheets-cms.js"></script>
+<script>
+// ── Auth guard ──────────────────────────────────────────────
+const _adminUser = typeof getUser === 'function' ? getUser() : null;
+if (!_adminUser) { window.location.href = 'login.html?redirect=admin.html'; }
+document.getElementById('sidebar-user').textContent = _adminUser?.name || _adminUser?.email || '—';
+
+// ── State ───────────────────────────────────────────────────
+let allProducts  = [];
+let allProjects  = [];
+let allCategories = [];
+let allUsers     = [];
+let allEnquiries = [];
+
+// ── Navigation ──────────────────────────────────────────────
+const PANELS = ['dashboard','products','projects','categories','users','enquiries','settings','setup'];
+const TITLES = { dashboard:'Dashboard', products:'Products', projects:'Projects',
+  categories:'Categories', users:'Users', enquiries:'Enquiries', settings:'Site Settings', setup:'Sheets Setup' };
+
+function showPanel(name) {
+  PANELS.forEach(p => {
+    document.getElementById('panel-'+p).classList.toggle('active', p === name);
+    const nav = document.getElementById('nav-'+p);
+    if (nav) nav.classList.toggle('active', p === name);
+  });
+  document.getElementById('page-title').textContent = TITLES[name] || name;
+  if (name === 'products')   loadProducts();
+  if (name === 'projects')   loadProjects();
+  if (name === 'categories') loadCategories();
+  if (name === 'users')      loadUsers();
+  if (name === 'enquiries')  loadEnquiries();
+  if (name === 'settings')   loadSettings();
+}
+
+// ── Sync status ─────────────────────────────────────────────
+async function checkConnection() {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot syncing';
+  lbl.textContent = 'Connecting…';
+  try {
+    await SheetsCMS.getSettings();
+    dot.className = 'sync-dot'; lbl.textContent = 'Sheets connected';
+  } catch {
+    dot.className = 'sync-dot offline'; lbl.textContent = 'Offline — using local data';
+  }
+}
+
+// ── Dashboard ───────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [prods, projs, cats, users, enqs] = await Promise.allSettled([
+      SheetsCMS.getProducts(),
+      SheetsCMS.getProjects(),
+      SheetsCMS.getCategories(),
+      // Users & Enquiries require admin — try gracefully
+      SheetsCMS.getEnquiries(),
+      SheetsCMS.getEnquiries(),
+    ]);
+    const products  = prods.value  || (typeof PRODUCTS  !== 'undefined' ? PRODUCTS  : []);
+    const projects  = projs.value  || (typeof PROJECTS  !== 'undefined' ? PROJECTS  : []);
+    const categories= cats.value   || (typeof CATEGORIES!== 'undefined' ? CATEGORIES: []);
+    const enquiries = enqs.value   || [];
+
+    document.getElementById('stat-products').textContent   = products.length;
+    document.getElementById('stat-projects').textContent   = projects.length;
+    document.getElementById('stat-categories').textContent = categories.length;
+    document.getElementById('stat-users').textContent      = '—';
+    document.getElementById('stat-enquiries').textContent  = enquiries.length;
+
+    const newEnqs = enquiries.filter(e => e.status === 'new');
+    document.getElementById('stat-new-enq').textContent = newEnqs.length;
+    if (newEnqs.length) {
+      const badge = document.getElementById('enquiry-badge');
+      badge.style.display = 'inline'; badge.textContent = newEnqs.length;
+    }
+
+    // Recent enquiries
+    renderRecentEnquiries(enquiries.slice(-5).reverse());
+  } catch (e) {
+    document.getElementById('dash-alert').innerHTML =
+      `<div class="cms-alert warning">⚠ Could not load from Sheets — displaying local data. ${e.message}</div>`;
+    document.getElementById('stat-products').textContent   = typeof PRODUCTS   !== 'undefined' ? PRODUCTS.length : '—';
+    document.getElementById('stat-projects').textContent   = typeof PROJECTS   !== 'undefined' ? PROJECTS.length : '—';
+    document.getElementById('stat-categories').textContent = typeof CATEGORIES !== 'undefined' ? CATEGORIES.length : '—';
+    renderRecentEnquiries([]);
+  }
+}
+
+function renderRecentEnquiries(enqs) {
+  const el = document.getElementById('recent-enquiries-table');
+  if (!enqs.length) { el.innerHTML = '<div style="padding:2rem;text-align:center;color:#aaa;font-size:0.85rem">No enquiries yet.</div>'; return; }
+  el.innerHTML = `<table><thead><tr><th>Name</th><th>Email</th><th>Product</th><th>Date</th><th>Status</th></tr></thead><tbody>
+    ${enqs.map(e => `<tr>
+      <td>${esc(e.name)}</td>
+      <td>${esc(e.email)}</td>
+      <td>${esc(e.productSlug||'—')}</td>
+      <td>${e.createdAt ? new Date(e.createdAt).toLocaleDateString('en-IN') : '—'}</td>
+      <td><span class="td-badge badge-${e.status==='new'?'featured':e.status==='closed'?'archived':'active'}">${esc(e.status)}</span></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+// ── PRODUCTS ────────────────────────────────────────────────
+async function loadProducts() {
+  try {
+    allProducts = await SheetsCMS.wrapWithFallback(
+      () => SheetsCMS.getProducts(),
+      () => typeof PRODUCTS !== 'undefined' ? PRODUCTS : []
+    );
+    // Populate category filter
+    const cats = [...new Set(allProducts.map(p => p.categoryId))];
+    const sel  = document.getElementById('product-cat-filter');
+    sel.innerHTML = '<option value="">All Categories</option>' +
+      cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    renderProductsTable();
+  } catch (e) { showError('products-table-body', e); }
+}
+
+function renderProductsTable() {
+  const search   = document.getElementById('product-search').value.toLowerCase();
+  const catF     = document.getElementById('product-cat-filter').value;
+  const statusF  = document.getElementById('product-status-filter').value;
+
+  let list = allProducts.filter(p => {
+    if (catF    && p.categoryId !== catF)   return false;
+    if (statusF && (p.status || 'active') !== statusF) return false;
+    if (search  && !`${p.name} ${p.slug} ${p.material}`.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  const el = document.getElementById('products-table-body');
+  if (!list.length) { el.innerHTML = '<div style="padding:2rem;text-align:center;color:#aaa">No products found.</div>'; return; }
+
+  el.innerHTML = `<table><thead><tr>
+    <th style="width:48px"></th><th>Name</th><th>Category</th><th>Availability</th>
+    <th>Status</th><th>Featured</th><th style="width:140px">Actions</th>
+  </tr></thead><tbody>
+    ${list.map(p => `<tr>
+      <td><img class="td-img" src="${(p.images?.[0])||''}" onerror="this.style.display='none'" alt=""></td>
+      <td><strong>${esc(p.name)}</strong><br><small style="color:#aaa">${esc(p.slug)}</small></td>
+      <td>${esc(p.categoryId)}</td>
+      <td style="font-size:0.78rem">${esc(p.availability||'—')}</td>
+      <td><span class="td-badge badge-${p.status==='archived'?'archived':p.status==='draft'?'draft':'active'}">${p.status||'active'}</span></td>
+      <td>${p.featured ? '<span class="td-badge badge-featured">✓ Featured</span>' : '—'}</td>
+      <td><div class="td-actions">
+        <button class="btn-action primary" onclick="openProductModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>
+        <button class="btn-action danger" onclick="archiveProduct('${p.id}')">Archive</button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function openProductModal(product) {
+  const isEdit = !!product;
+  document.getElementById('product-modal-title').textContent = isEdit ? 'Edit Product' : 'Add Product';
+  document.getElementById('pm-id').value           = product?.id          || '';
+  document.getElementById('pm-name').value         = product?.name        || '';
+  document.getElementById('pm-slug').value         = product?.slug        || '';
+  document.getElementById('pm-short-desc').value   = product?.shortDescription || '';
+  document.getElementById('pm-description').value  = product?.description || '';
+  document.getElementById('pm-material').value     = product?.material    || '';
+  document.getElementById('pm-dimensions').value   = product?.dimensions  || '';
+  document.getElementById('pm-availability').value = product?.availability|| '';
+  document.getElementById('pm-price').value        = product?.price       || '';
+  document.getElementById('pm-images').value       = (product?.images    || []).join(' | ');
+  document.getElementById('pm-finishes').value     = (product?.finishes  || []).join(' | ');
+  document.getElementById('pm-featured').checked   = !!product?.featured;
+  document.getElementById('pm-status').value       = product?.status      || 'active';
+
+  // Populate category dropdown
+  const catSel = document.getElementById('pm-category');
+  const cats   = typeof CATEGORIES !== 'undefined' ? CATEGORIES : [];
+  catSel.innerHTML = cats.map(c => `<option value="${c.id}" ${product?.categoryId===c.id?'selected':''}>${c.name}</option>`).join('');
+  if (product?.categoryId) catSel.value = product.categoryId;
+
+  // Auto-slug from name
+  document.getElementById('pm-name').oninput = function() {
+    if (!isEdit) document.getElementById('pm-slug').value =
+      this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  };
+
+  document.getElementById('product-modal').classList.add('open');
+}
+
+async function saveProduct() {
+  const product = {
+    id:               document.getElementById('pm-id').value || Date.now(),
+    name:             document.getElementById('pm-name').value.trim(),
+    slug:             document.getElementById('pm-slug').value.trim(),
+    categoryId:       document.getElementById('pm-category').value,
+    shortDescription: document.getElementById('pm-short-desc').value.trim(),
+    description:      document.getElementById('pm-description').value.trim(),
+    material:         document.getElementById('pm-material').value.trim(),
+    dimensions:       document.getElementById('pm-dimensions').value.trim(),
+    availability:     document.getElementById('pm-availability').value.trim(),
+    price:            document.getElementById('pm-price').value || 0,
+    images:           document.getElementById('pm-images').value.split('|').map(s=>s.trim()).filter(Boolean),
+    finishes:         document.getElementById('pm-finishes').value.split('|').map(s=>s.trim()).filter(Boolean),
+    featured:         document.getElementById('pm-featured').checked,
+    status:           document.getElementById('pm-status').value,
+  };
+  if (!product.name || !product.slug) { alert('Name and slug are required.'); return; }
+  try {
+    await SheetsCMS.upsertProduct(product);
+    closeModal('product-modal');
+    await loadProducts();
+    showToast?.('Product saved to Sheets ✓');
+  } catch (e) { alert('Error saving: ' + e.message); }
+}
+
+async function archiveProduct(id) {
+  if (!confirm('Archive this product? It will be hidden on the website.')) return;
+  try {
+    await SheetsCMS.deleteProduct(id);
+    await loadProducts();
+    showToast?.('Product archived ✓');
+  } catch (e) { alert(e.message); }
+}
+
+// ── PROJECTS ────────────────────────────────────────────────
+async function loadProjects() {
+  try {
+    allProjects = await SheetsCMS.wrapWithFallback(
+      () => SheetsCMS.getProjects(),
+      () => typeof PROJECTS !== 'undefined' ? PROJECTS : []
+    );
+    const industries = [...new Set(allProjects.map(p => p.industry).filter(Boolean))];
+    const sel = document.getElementById('project-industry-filter');
+    sel.innerHTML = '<option value="">All Industries</option>' +
+      industries.map(i => `<option value="${i}">${i}</option>`).join('');
+    renderProjectsTable();
+  } catch (e) { showError('projects-table-body', e); }
+}
+
+function renderProjectsTable() {
+  const search = document.getElementById('project-search').value.toLowerCase();
+  const indF   = document.getElementById('project-industry-filter').value;
+
+  let list = allProjects.filter(p => {
+    if (indF   && p.industry !== indF) return false;
+    if (search && !`${p.title} ${p.location} ${p.industry}`.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  const el = document.getElementById('projects-table-body');
+  if (!list.length) { el.innerHTML = '<div style="padding:2rem;text-align:center;color:#aaa">No projects found.</div>'; return; }
+
+  el.innerHTML = `<table><thead><tr>
+    <th style="width:48px"></th><th>Title</th><th>Location</th><th>Industry</th>
+    <th>Year</th><th>Featured</th><th style="width:80px">Actions</th>
+  </tr></thead><tbody>
+    ${list.map(p => `<tr>
+      <td><img class="td-img" src="${esc(p.image||'')}" onerror="this.style.display='none'" alt=""></td>
+      <td><strong>${esc(p.title)}</strong><br><small style="color:#aaa">${esc(p.slug)}</small></td>
+      <td style="font-size:0.82rem">${esc(p.location||'—')}</td>
+      <td>${esc(p.industry||'—')}</td>
+      <td>${esc(p.completionYear||'—')}</td>
+      <td>${p.featured?'<span class="td-badge badge-featured">✓</span>':'—'}</td>
+      <td><button class="btn-action primary" onclick="openProjectModal(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function openProjectModal(project) {
+  const f = k => document.getElementById('prm-'+k);
+  f('id').value          = project?.id          || '';
+  f('title').value       = project?.title       || '';
+  f('slug').value        = project?.slug        || '';
+  f('location').value    = project?.location    || '';
+  f('industry').value    = project?.industry    || 'Finance';
+  f('year').value        = project?.completionYear || '';
+  f('area').value        = project?.area        || '';
+  f('description').value = project?.description || '';
+  f('scope').value       = project?.scope       || '';
+  f('challenge').value   = project?.challenge   || '';
+  f('testimonial').value = project?.clientTestimonial || '';
+  f('client-name').value = project?.clientName  || '';
+  f('timeline').value    = project?.timeline    || '';
+  f('pieces').value      = project?.furniturePieces || '';
+  f('image').value       = project?.image       || '';
+  f('image2').value      = project?.secondImage || '';
+  f('products').value    = (project?.products   || []).join(' | ');
+  document.getElementById('prm-featured').checked = !!project?.featured;
+  document.getElementById('project-modal-title').textContent = project ? 'Edit Project' : 'Add Project';
+  document.getElementById('project-modal').classList.add('open');
+}
+
+async function saveProject() {
+  const f = k => document.getElementById('prm-'+k).value.trim();
+  const project = {
+    id:                 document.getElementById('prm-id').value || Date.now(),
+    title:              f('title'), slug: f('slug'), location: f('location'),
+    industry:           f('industry'), completionYear: f('year'), area: f('area'),
+    description:        f('description'), scope: f('scope'), challenge: f('challenge'),
+    clientTestimonial:  f('testimonial'), clientName: f('client-name'),
+    timeline:           f('timeline'), furniturePieces: f('pieces'),
+    image:              f('image'), secondImage: f('image2'),
+    products:           f('products').split('|').map(s=>s.trim()).filter(Boolean),
+    featured:           document.getElementById('prm-featured').checked,
+  };
+  if (!project.title || !project.slug) { alert('Title and slug required.'); return; }
+  try {
+    await SheetsCMS.upsertProject(project);
+    closeModal('project-modal');
+    await loadProjects();
+    showToast?.('Project saved ✓');
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ── CATEGORIES ──────────────────────────────────────────────
+async function loadCategories() {
+  try {
+    allCategories = await SheetsCMS.wrapWithFallback(
+      () => SheetsCMS.getCategories(),
+      () => typeof CATEGORIES !== 'undefined' ? CATEGORIES : []
+    );
+    renderCategoriesTable();
+  } catch (e) { showError('categories-table-body', e); }
+}
+
+function renderCategoriesTable() {
+  const el = document.getElementById('categories-table-body');
+  el.innerHTML = `<table><thead><tr>
+    <th>ID</th><th>Name</th><th>Description</th><th>Order</th><th>Actions</th>
+  </tr></thead><tbody>
+    ${allCategories.map(c => `<tr>
+      <td><code style="font-size:0.78rem">${esc(c.id)}</code></td>
+      <td><strong>${esc(c.name)}</strong></td>
+      <td style="font-size:0.82rem;max-width:280px">${esc(c.description||'—')}</td>
+      <td>${esc(String(c.displayOrder||99))}</td>
+      <td><button class="btn-action primary" onclick="openCategoryModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">Edit</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function openCategoryModal(cat) {
+  document.getElementById('cm-id-field').value   = cat?.id          || '';
+  document.getElementById('cm-name').value       = cat?.name        || '';
+  document.getElementById('cm-description').value= cat?.description || '';
+  document.getElementById('cm-hero').value       = cat?.heroImage   || '';
+  document.getElementById('cm-order').value      = cat?.displayOrder|| 99;
+  document.getElementById('cm-original-id').value= cat?.id          || '';
+  document.getElementById('category-modal').classList.add('open');
+}
+
+async function saveCategory() {
+  const cat = {
+    id:           document.getElementById('cm-id-field').value.trim(),
+    name:         document.getElementById('cm-name').value.trim(),
+    description:  document.getElementById('cm-description').value.trim(),
+    heroImage:    document.getElementById('cm-hero').value.trim(),
+    displayOrder: parseInt(document.getElementById('cm-order').value)||99,
+  };
+  if (!cat.id || !cat.name) { alert('ID and name required.'); return; }
+  try {
+    await SheetsCMS.upsertCategory(cat);
+    closeModal('category-modal');
+    await loadCategories();
+    showToast?.('Category saved ✓');
+  } catch (e) { alert(e.message); }
+}
+
+// ── USERS ───────────────────────────────────────────────────
+async function loadUsers() {
+  try {
+    // getUsers is admin-only via Sheets
+    const rows = await SheetsCMS.wrapWithFallback(
+      async () => {
+        const r = await fetch(`${SheetsCMS.config.API_BASE}/${SheetsCMS.config.SPREADSHEET_ID}/values/${encodeURIComponent('Users!A2:J500')}?valueRenderOption=UNFORMATTED_VALUE`,
+          { headers: { Authorization: `Bearer ${await window._getAccessToken?.() || ''}` } });
+        const d = await r.json();
+        return (d.values||[]).map(row => {
+          const u = {};
+          ['id','email','passwordHash','name','phone','company','role','createdAt','lastLogin','active']
+            .forEach((k,i) => u[k] = row[i]||'');
+          return u;
+        });
+      },
+      () => []
+    );
+    allUsers = rows;
+    renderUsersTable();
+  } catch (e) { showError('users-table-body', e); }
+}
+
+function renderUsersTable() {
+  const search = document.getElementById('user-search').value.toLowerCase();
+  const list   = allUsers.filter(u =>
+    !search || `${u.name} ${u.email} ${u.company}`.toLowerCase().includes(search)
+  );
+  const el = document.getElementById('users-table-body');
+  if (!list.length) { el.innerHTML = '<div style="padding:2rem;text-align:center;color:#aaa">No users found.</div>'; return; }
+  el.innerHTML = `<table><thead><tr>
+    <th>Name</th><th>Email</th><th>Company</th><th>Role</th><th>Joined</th><th>Last Login</th>
+  </tr></thead><tbody>
+    ${list.map(u => `<tr>
+      <td><strong>${esc(u.name)}</strong></td>
+      <td>${esc(u.email)}</td>
+      <td>${esc(u.company||'—')}</td>
+      <td><span class="td-badge badge-${u.role==='admin'?'admin':'customer'}">${esc(u.role||'customer')}</span></td>
+      <td style="font-size:0.78rem">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : '—'}</td>
+      <td style="font-size:0.78rem">${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-IN') : 'Never'}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+  document.getElementById('stat-users').textContent = allUsers.length;
+}
+
+function openUserModal() {
+  ['name','email','password','phone','company'].forEach(k => document.getElementById('um-'+k).value = '');
+  document.getElementById('um-role').value = 'customer';
+  document.getElementById('user-modal').classList.add('open');
+}
+
+async function saveUser() {
+  const name     = document.getElementById('um-name').value.trim();
+  const email    = document.getElementById('um-email').value.trim();
+  const password = document.getElementById('um-password').value;
+  const phone    = document.getElementById('um-phone').value.trim();
+  const company  = document.getElementById('um-company').value.trim();
+  if (!name || !email || !password) { alert('Name, email and password required.'); return; }
+  if (password.length < 6) { alert('Password must be at least 6 characters.'); return; }
+  try {
+    const result = await SheetsCMS.register({ name, email, password, phone, company });
+    if (!result.ok) { alert(result.error); return; }
+    closeModal('user-modal');
+    await loadUsers();
+    showToast?.('User created ✓');
+  } catch (e) { alert(e.message); }
+}
+
+// ── ENQUIRIES ────────────────────────────────────────────────
+async function loadEnquiries() {
+  try {
+    allEnquiries = await SheetsCMS.wrapWithFallback(
+      () => SheetsCMS.getEnquiries(),
+      () => []
+    );
+    renderEnquiriesTable();
+  } catch (e) { showError('enquiries-table-body', e); }
+}
+
+function renderEnquiriesTable() {
+  const search  = document.getElementById('enq-search').value.toLowerCase();
+  const statusF = document.getElementById('enq-status-filter').value;
+  const list    = allEnquiries.filter(e => {
+    if (statusF && e.status !== statusF) return false;
+    if (search  && !`${e.name} ${e.email} ${e.company} ${e.productSlug}`.toLowerCase().includes(search)) return false;
+    return true;
+  }).reverse();
+
+  const el = document.getElementById('enquiries-table-body');
+  if (!list.length) { el.innerHTML = '<div style="padding:2rem;text-align:center;color:#aaa">No enquiries.</div>'; return; }
+
+  el.innerHTML = `<table><thead><tr>
+    <th>Name</th><th>Email</th><th>Company</th><th>Product</th><th>Message</th>
+    <th>Date</th><th>Status</th><th>Actions</th>
+  </tr></thead><tbody>
+    ${list.map(e => `<tr>
+      <td><strong>${esc(e.name)}</strong></td>
+      <td style="font-size:0.8rem">${esc(e.email)}</td>
+      <td style="font-size:0.8rem">${esc(e.company||'—')}</td>
+      <td style="font-size:0.78rem">${esc(e.productSlug||'—')}</td>
+      <td style="font-size:0.78rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(e.message)}">${esc(e.message||'—')}</td>
+      <td style="font-size:0.78rem">${e.createdAt?new Date(e.createdAt).toLocaleDateString('en-IN'):'—'}</td>
+      <td><span class="td-badge badge-${e.status==='new'?'featured':e.status==='closed'?'archived':'active'}">${esc(e.status||'new')}</span></td>
+      <td><div class="td-actions">
+        <button class="btn-action" onclick="updateEnqStatus('${e.id}','in_progress')">In Progress</button>
+        <button class="btn-action danger" onclick="updateEnqStatus('${e.id}','closed')">Close</button>
+      </div></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function updateEnqStatus(id, status) {
+  try {
+    await SheetsCMS.updateEnquiryStatus(id, status);
+    await loadEnquiries();
+  } catch (e) { alert(e.message); }
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────
+const SETTING_FIELDS = [
+  { key:'site_title',      label:'Site Title',          type:'text' },
+  { key:'hero_heading',    label:'Hero Heading',         type:'text' },
+  { key:'hero_subheading', label:'Hero Subheading',      type:'textarea' },
+  { key:'about_text',      label:'About Page Text',      type:'textarea' },
+  { key:'contact_email',   label:'Contact Email',        type:'email' },
+  { key:'contact_phone',   label:'Contact Phone',        type:'text' },
+  { key:'contact_address', label:'Contact Address',      type:'text' },
+  { key:'instagram_url',   label:'Instagram URL',        type:'url' },
+  { key:'linkedin_url',    label:'LinkedIn URL',         type:'url' },
+  { key:'whatsapp_number', label:'WhatsApp Number',      type:'text' },
+];
+
+async function loadSettings() {
+  try {
+    const settings = await SheetsCMS.wrapWithFallback(() => SheetsCMS.getSettings(), () => ({}));
+    const el = document.getElementById('settings-form-body');
+    el.innerHTML = `
+      <div class="cms-table-wrap" style="padding:1.5rem;">
+        <h3 style="margin:0 0 1.25rem;font-family:Georgia,serif;font-size:1.05rem;">Site Configuration</h3>
+        <div id="settings-alert"></div>
+        ${SETTING_FIELDS.map(f => `
+          <div class="form-group">
+            <label class="form-label">${esc(f.label)}</label>
+            ${f.type==='textarea'
+              ? `<textarea class="form-textarea" id="sf-${f.key}" rows="3">${esc(settings[f.key]||'')}</textarea>`
+              : `<input class="form-input" type="${f.type}" id="sf-${f.key}" value="${esc(settings[f.key]||'')}">`
+            }
+          </div>`).join('')}
+        <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
+          <button class="btn-primary" onclick="saveSettings()">Save All Settings to Sheets</button>
+        </div>
+      </div>`;
+  } catch (e) { showError('settings-form-body', e); }
+}
+
+async function saveSettings() {
+  const alert = document.getElementById('settings-alert');
+  alert.innerHTML = '<div class="cms-alert info">Saving…</div>';
+  try {
+    for (const f of SETTING_FIELDS) {
+      const el = document.getElementById('sf-'+f.key);
+      if (el) await SheetsCMS.setSetting(f.key, el.value);
+    }
+    alert.innerHTML = '<div class="cms-alert success">✓ Settings saved to Google Sheets</div>';
+    setTimeout(() => alert.innerHTML = '', 3000);
+  } catch (e) { alert.innerHTML = `<div class="cms-alert error">Error: ${e.message}</div>`; }
+}
+
+// ── SETUP ────────────────────────────────────────────────────
+async function testConnection() {
+  const el = document.getElementById('setup-alert');
+  el.innerHTML = '<div class="cms-alert info">Testing connection…</div>';
+  try {
+    await SheetsCMS.getSettings();
+    el.innerHTML = '<div class="cms-alert success">✓ Connected to Google Sheets successfully!</div>';
+  } catch (e) {
+    el.innerHTML = `<div class="cms-alert error">✗ Connection failed: ${e.message}<br>Check your SPREADSHEET_ID and SERVICE_ACCOUNT credentials in sheets-cms.js</div>`;
+  }
+}
+
+async function runInit() {
+  const logEl = document.getElementById('seed-log');
+  logEl.style.display = 'block';
+  logEl.textContent = 'Initialising sheet headers…\n';
+  try {
+    await SheetsCMS.init();
+    logEl.textContent += '✓ Headers written to all 6 tabs.\n';
+    logEl.textContent += 'Now click "Seed All Data" to populate the sheets.';
+    document.getElementById('setup-alert').innerHTML = '<div class="cms-alert success">✓ Sheet headers created</div>';
+  } catch (e) {
+    logEl.textContent += `✗ Error: ${e.message}`;
+    document.getElementById('setup-alert').innerHTML = `<div class="cms-alert error">${e.message}</div>`;
+  }
+}
+
+async function runSeed() {
+  const logEl = document.getElementById('seed-log');
+  logEl.style.display = 'block';
+  logEl.textContent = 'Seeding data into Google Sheets…\n\n';
+  try {
+    const results = await SheetsCMS.seed();
+    results.forEach(line => { logEl.textContent += line + '\n'; });
+    logEl.textContent += '\n✅ Seeding complete! Your spreadsheet is now the CMS.';
+    document.getElementById('setup-alert').innerHTML = '<div class="cms-alert success">✓ All data seeded to Google Sheets</div>';
+  } catch (e) {
+    logEl.textContent += `✗ Error: ${e.message}`;
+    document.getElementById('setup-alert').innerHTML = `<div class="cms-alert error">${e.message}</div>`;
+  }
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showError(targetId, err) {
+  document.getElementById(targetId).innerHTML =
+    `<div class="cms-alert error" style="margin:1rem">Error: ${esc(err.message)}</div>`;
+}
+document.querySelectorAll('.cms-modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// ── Boot ────────────────────────────────────────────────────
+(async () => {
+  checkConnection();
+  await loadDashboard();
+})();
+</script>
+</body>
+</html>

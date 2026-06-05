@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enquiry Analytics — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .analytics-page { padding:4rem 0 6rem; }
+    .analytics-page h1 { font-family:var(--font-serif); font-size:2.5rem; margin-bottom:0.5rem; }
+    .analytics-page .sub { color:var(--muted-foreground); margin-bottom:2.5rem; }
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1.25rem; margin-bottom:2.5rem; }
+    @media(max-width:900px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:480px){ .stats-grid { grid-template-columns:1fr 1fr; } }
+    .stat-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:1.5rem; }
+    .stat-card .label { font-size:0.78rem; font-weight:700; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:0.5rem; }
+    .stat-card .value { font-family:var(--font-serif); font-size:2.2rem; font-weight:700; line-height:1; margin-bottom:0.25rem; }
+    .stat-card .delta { font-size:0.8rem; color:var(--muted-foreground); }
+    .stat-card .delta.up { color:#27ae60; }
+    .section-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:1.75rem; margin-bottom:1.5rem; }
+    .section-card h3 { font-family:var(--font-serif); font-size:1.15rem; margin-bottom:1.25rem; display:flex; align-items:center; justify-content:space-between; }
+    /* Table */
+    .data-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+    .data-table th { text-align:left; padding:0.6rem 0.75rem; font-size:0.75rem; font-weight:700; color:var(--muted-foreground); text-transform:uppercase; letter-spacing:0.06em; border-bottom:2px solid var(--border); }
+    .data-table td { padding:0.75rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .data-table tr:hover td { background:var(--muted); }
+    .status-badge { display:inline-flex; align-items:center; gap:0.3rem; padding:0.2rem 0.6rem; border-radius:12px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; }
+    .status-badge.pending { background:#fff3cd; color:#856404; }
+    .status-badge.contacted { background:#d1ecf1; color:#0c5460; }
+    .status-badge.quoted { background:#d4edda; color:#155724; }
+    .status-badge.converted { background:#c3e6cb; color:#155724; }
+    /* Bar chart */
+    .bar-chart { display:flex; flex-direction:column; gap:0.75rem; }
+    .bar-row { display:flex; align-items:center; gap:0.75rem; }
+    .bar-label { font-size:0.82rem; min-width:130px; text-align:right; color:var(--muted-foreground); }
+    .bar-track { flex:1; height:22px; background:var(--muted); border-radius:4px; overflow:hidden; }
+    .bar-fill { height:100%; background:var(--foreground); border-radius:4px; transition:width 0.6s ease; display:flex; align-items:center; justify-content:flex-end; padding-right:6px; }
+    .bar-fill span { font-size:0.72rem; font-weight:700; color:var(--primary-foreground); }
+    .bar-val { font-size:0.82rem; min-width:50px; color:var(--foreground); font-weight:600; }
+    /* Tabs */
+    .tab-bar { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:1.5rem; }
+    .tab-btn { padding:0.65rem 1.25rem; font-size:0.875rem; font-weight:600; border:none; background:none; cursor:pointer; color:var(--muted-foreground); border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; }
+    .tab-btn.active { color:var(--foreground); border-bottom-color:var(--foreground); }
+    /* Access gate */
+    .access-gate { text-align:center; padding:5rem 2rem; }
+    .access-gate h2 { font-family:var(--font-serif); font-size:2rem; margin-bottom:0.75rem; }
+    .access-gate p { color:var(--muted-foreground); margin-bottom:1.5rem; }
+    .access-gate a { display:inline-block; padding:0.75rem 2rem; background:var(--foreground); color:var(--primary-foreground); border-radius:6px; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <div class="container analytics-page" id="analytics-page-wrap">
+
+    <div id="access-gate" class="access-gate" style="display:none;">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 1.5rem;display:block;opacity:0.4;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <h2>Sign In to View Analytics</h2>
+      <p>Enquiry analytics are available to registered users. Please sign in to view your enquiry history and quote tracking.</p>
+      <a href="login.html">Sign In / Register</a>
+    </div>
+
+    <div id="analytics-content">
+      <h1>Enquiry Analytics</h1>
+      <p class="sub">Track your enquiries, quotes, and order history — all in one place.</p>
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+        <button class="tab-btn" data-tab="enquiries" onclick="switchTab('enquiries')">Enquiries</button>
+        <button class="tab-btn" data-tab="quotes" onclick="switchTab('quotes')">Quotes</button>
+        <button class="tab-btn" data-tab="orders" onclick="switchTab('orders')">Orders</button>
+      </div>
+
+      <!-- Overview Tab -->
+      <div id="tab-overview">
+        <div class="stats-grid" id="stats-grid"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+          <div class="section-card">
+            <h3>Enquiries by Category</h3>
+            <div class="bar-chart" id="category-chart"></div>
+          </div>
+          <div class="section-card">
+            <h3>Recent Activity</h3>
+            <div id="recent-activity"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enquiries Tab -->
+      <div id="tab-enquiries" style="display:none;">
+        <div class="section-card">
+          <h3>
+            All Enquiries
+            <span id="enquiry-count" style="font-size:0.82rem;color:var(--muted-foreground);font-family:var(--font-sans);font-weight:400;"></span>
+          </h3>
+          <div style="overflow-x:auto;">
+            <table class="data-table" id="enquiries-table">
+              <thead><tr>
+                <th>Enquiry ID</th><th>Date</th><th>Items</th><th>Value (excl. GST)</th><th>Status</th><th></th>
+              </tr></thead>
+              <tbody id="enquiries-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quotes Tab -->
+      <div id="tab-quotes" style="display:none;">
+        <div class="section-card">
+          <h3>
+            Quote Requests
+            <span id="quote-count" style="font-size:0.82rem;color:var(--muted-foreground);font-family:var(--font-sans);font-weight:400;"></span>
+          </h3>
+          <div style="overflow-x:auto;">
+            <table class="data-table" id="quotes-table">
+              <thead><tr>
+                <th>Quote Ref</th><th>Date</th><th>Project Type</th><th>Items</th><th>Est. Value</th><th>Status</th>
+              </tr></thead>
+              <tbody id="quotes-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Tab -->
+      <div id="tab-orders" style="display:none;">
+        <div class="section-card">
+          <h3>
+            Order History
+            <span id="order-count" style="font-size:0.82rem;color:var(--muted-foreground);font-family:var(--font-sans);font-weight:400;"></span>
+          </h3>
+          <div style="overflow-x:auto;">
+            <table class="data-table" id="orders-table">
+              <thead><tr>
+                <th>Order #</th><th>Date</th><th>Items</th><th>Total (incl. GST)</th><th>Payment</th><th>Status</th>
+              </tr></thead>
+              <tbody id="orders-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('header-placeholder').innerHTML = createHeader('enquiry-analytics.html');
+    document.getElementById('footer-placeholder').innerHTML = createFooter();
+    initHamburger();
+
+    const user = typeof getUser === 'function' ? getUser() : null;
+    if (!user) {
+      document.getElementById('access-gate').style.display = 'block';
+      document.getElementById('analytics-content').style.display = 'none';
+    } else {
+      loadAnalytics();
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    function loadAnalytics() {
+      const enquiries = JSON.parse(localStorage.getItem('artisan_enquiries') || '[]');
+      const quotes = JSON.parse(localStorage.getItem('artisan_quotes') || '[]');
+      const orders = JSON.parse(localStorage.getItem('artisan_orders') || '[]');
+
+      // Stats
+      const totalEnqValue = enquiries.reduce((s, e) => s + (e.total || 0), 0);
+      const totalOrderValue = orders.reduce((s, o) => s + (o.total || 0), 0);
+      document.getElementById('stats-grid').innerHTML = `
+        <div class="stat-card">
+          <div class="label">Total Enquiries</div>
+          <div class="value">${enquiries.length}</div>
+          <div class="delta">All time</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Quote Requests</div>
+          <div class="value">${quotes.length}</div>
+          <div class="delta">Pending review</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Orders Placed</div>
+          <div class="value">${orders.length}</div>
+          <div class="delta up">${orders.length > 0 ? '✓ Active' : 'No orders yet'}</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total Value</div>
+          <div class="value" style="font-size:1.5rem;">${formatPrice(totalEnqValue + totalOrderValue)}</div>
+          <div class="delta">Enquiries + Orders</div>
+        </div>`;
+
+      // Category chart — from enquiry items
+      const catCount = {};
+      enquiries.forEach(e => (e.items || []).forEach(item => {
+        const cat = getCategoryLabel(item.categoryId);
+        catCount[cat] = (catCount[cat] || 0) + item.qty;
+      }));
+      quotes.forEach(q => (q.items || []).forEach(item => {
+        const cat = getCategoryLabel(item.categoryId);
+        catCount[cat] = (catCount[cat] || 0) + item.qty;
+      }));
+      const sortedCats = Object.entries(catCount).sort((a,b) => b[1]-a[1]).slice(0,6);
+      const maxVal = sortedCats[0]?.[1] || 1;
+      document.getElementById('category-chart').innerHTML = sortedCats.length
+        ? sortedCats.map(([cat, count]) => `
+            <div class="bar-row">
+              <span class="bar-label">${cat}</span>
+              <div class="bar-track"><div class="bar-fill" style="width:${(count/maxVal*100).toFixed(0)}%"><span>${count}</span></div></div>
+              <span class="bar-val">${count} item${count !== 1 ? 's':''}</span>
+            </div>`).join('')
+        : '<p style="font-size:0.875rem;color:var(--muted-foreground);">No data yet. Start by browsing products and sending enquiries.</p>';
+
+      // Recent activity
+      const allActivity = [
+        ...enquiries.map(e => ({ type:'Enquiry', id:e.id, date:e.date, value:e.total, status:e.status || 'Pending' })),
+        ...quotes.map(q => ({ type:'Quote', id:q.ref, date:q.date, value:q.total, status:q.status || 'Pending' })),
+        ...orders.map(o => ({ type:'Order', id:o.id, date:o.date, value:o.total, status:'Confirmed' })),
+      ].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,6);
+      document.getElementById('recent-activity').innerHTML = allActivity.length
+        ? allActivity.map(a => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border);font-size:0.85rem;">
+            <div>
+              <span style="font-weight:600;">${a.type}</span>
+              <span style="color:var(--muted-foreground);margin-left:0.4rem;">${a.id}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              <span style="color:var(--muted-foreground);font-size:0.78rem;">${formatDate(a.date)}</span>
+              <span class="status-badge ${a.status.toLowerCase()}">${a.status}</span>
+            </div>
+          </div>`).join('')
+        : '<p style="font-size:0.875rem;color:var(--muted-foreground);">No activity yet.</p>';
+
+      // Enquiries table
+      document.getElementById('enquiry-count').textContent = enquiries.length + ' total';
+      document.getElementById('enquiries-tbody').innerHTML = enquiries.length
+        ? enquiries.map(e => `
+          <tr>
+            <td style="font-weight:600;">${e.id}</td>
+            <td>${formatDate(e.date)}</td>
+            <td>${(e.items || []).reduce((s,i)=>s+i.qty,0)} item${(e.items||[]).reduce((s,i)=>s+i.qty,0)!==1?'s':''}</td>
+            <td>${formatPrice(e.total)}</td>
+            <td><span class="status-badge ${(e.status||'pending').toLowerCase()}">${e.status || 'Pending'}</span></td>
+            <td><a href="enquiry.html" style="font-size:0.8rem;color:var(--foreground);">Follow up →</a></td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted-foreground);">No enquiries yet. <a href="products.html" style="color:var(--foreground);">Browse products →</a></td></tr>';
+
+      // Quotes table
+      document.getElementById('quote-count').textContent = quotes.length + ' total';
+      document.getElementById('quotes-tbody').innerHTML = quotes.length
+        ? quotes.map(q => `
+          <tr>
+            <td style="font-weight:600;">${q.ref}</td>
+            <td>${formatDate(q.date)}</td>
+            <td>${q.contact?.projectType || '—'}</td>
+            <td>${(q.items||[]).reduce((s,i)=>s+i.qty,0)} items</td>
+            <td>${formatPrice(q.total)}</td>
+            <td><span class="status-badge ${(q.status||'pending').toLowerCase()}">${q.status || 'Pending'}</span></td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted-foreground);">No quotes yet. <a href="quote-builder.html" style="color:var(--foreground);">Build a quote →</a></td></tr>';
+
+      // Orders table
+      document.getElementById('order-count').textContent = orders.length + ' total';
+      document.getElementById('orders-tbody').innerHTML = orders.length
+        ? orders.map(o => `
+          <tr>
+            <td style="font-weight:600;">${o.id}</td>
+            <td>${formatDate(o.date)}</td>
+            <td>${(o.items||[]).reduce((s,i)=>s+i.qty,0)} items</td>
+            <td>${formatPrice(Math.round((o.total||0)*1.18))}</td>
+            <td style="text-transform:capitalize;">${(o.paymentMethod||'').replace(/-/g,' ') || '—'}</td>
+            <td><span class="status-badge confirmed">${o.status || 'Confirmed'}</span></td>
+          </tr>`).join('')
+        : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--muted-foreground);">No orders yet. <a href="cart.html" style="color:var(--foreground);">View cart →</a></td></tr>';
+    }
+
+    window.switchTab = function(tab) {
+      document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+      ['overview','enquiries','quotes','orders'].forEach(t => {
+        document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+      });
+    };
+  </script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

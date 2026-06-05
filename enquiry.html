@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request a Quote — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div id="header-placeholder"></div>
+
+  <section class="enquiry-section">
+    <!-- Header -->
+    <div class="enquiry-header fade-up">
+      <p class="section-eyebrow" style="text-align:center;">Get a Quote</p>
+      <h1>Request a Quote</h1>
+      <p>Tell us about your project and we'll get back to you within one business day with a preliminary response.</p>
+    </div>
+
+    <!-- Success state (hidden by default) -->
+    <div id="enquiry-success" style="display:none;" class="success-box fade-up">
+      <div class="success-icon">✓</div>
+      <h2>Enquiry Received</h2>
+      <p>Thank you for your enquiry. Our team will review your requirements and respond within one business day.</p>
+      <a href="products.html" class="btn-dark" style="margin-top:1rem;">Continue Browsing</a>
+    </div>
+
+    <!-- Form -->
+    <form id="enquiry-form" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="firstName">First Name *</label>
+          <input class="form-input" type="text" id="firstName" name="firstName" placeholder="Rahul" required>
+          <span class="form-error" id="err-firstName"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lastName">Last Name *</label>
+          <input class="form-input" type="text" id="lastName" name="lastName" placeholder="Mehta" required>
+          <span class="form-error" id="err-lastName"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address *</label>
+          <input class="form-input" type="email" id="email" name="email" placeholder="rahul@company.com" required>
+          <span class="form-error" id="err-email"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone Number</label>
+          <input class="form-input" type="tel" id="phone" name="phone" placeholder="+91 98765 43210">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="company">Company / Organisation</label>
+        <input class="form-input" type="text" id="company" name="company" placeholder="Acme Corp">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="projectType">Project Type *</label>
+          <select class="form-select form-input" id="projectType" name="projectType" required>
+            <option value="">Select project type</option>
+            <option>Corporate Office</option>
+            <option>Hospitality</option>
+            <option>Healthcare</option>
+            <option>Residential</option>
+            <option>Public / Civic</option>
+            <option>Retail</option>
+            <option>Other</option>
+          </select>
+          <span class="form-error" id="err-projectType"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="budget">Approximate Budget</label>
+          <select class="form-select form-input" id="budget" name="budget">
+            <option value="">Prefer not to say</option>
+            <option>Under ₹5 Lakhs</option>
+            <option>₹5 – 20 Lakhs</option>
+            <option>₹20 – 50 Lakhs</option>
+            <option>₹50 Lakhs – 1 Crore</option>
+            <option>Over ₹1 Crore</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="message">Project Details *</label>
+        <textarea class="form-textarea" id="message" name="message" rows="6"
+          placeholder="Please describe your project, space dimensions, quantity requirements, timeline, and any specific requirements..." required></textarea>
+        <span class="form-error" id="err-message"></span>
+      </div>
+
+      <button type="submit" class="btn-submit" id="enquiry-submit">SUBMIT ENQUIRY</button>
+      <p class="form-note">We will never share your details with third parties. Typical response time: 1–2 business days.</p>
+    </form>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/enquiry.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search — Artisan & Co.</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .search-hero {
+      background: var(--muted);
+      padding: 4rem 0 3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-bar-wrap {
+      position: relative;
+      max-width: 680px;
+      margin: 1.5rem 0 0;
+    }
+    .search-input-big {
+      width: 100%;
+      padding: 1.125rem 3.5rem 1.125rem 1.25rem;
+      font-size: 1.125rem;
+      border: 2px solid var(--border);
+      background: var(--background);
+      color: var(--foreground);
+      outline: none;
+      font-family: var(--font-sans);
+      transition: border-color 0.2s;
+      border-radius: 0;
+    }
+    .search-input-big:focus { border-color: var(--accent); }
+    .search-icon {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted-foreground);
+      pointer-events: none;
+    }
+    .search-clear {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted-foreground);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      line-height: 1;
+      display: none;
+    }
+    .search-meta {
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+      margin-top: 1rem;
+    }
+    .search-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 2.5rem;
+    }
+    .search-tab {
+      padding: 0.875rem 1.5rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--muted-foreground);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .search-tab.active {
+      color: var(--foreground);
+      border-bottom-color: var(--accent);
+    }
+    .search-tab:hover { color: var(--foreground); }
+
+    .result-count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: var(--accent);
+      color: var(--accent-foreground);
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 50%;
+      margin-left: 0.5rem;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 5rem 0;
+      color: var(--muted-foreground);
+    }
+    .empty-state h3 {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      color: var(--foreground);
+      margin-bottom: 0.75rem;
+    }
+    .empty-state p { font-size: 0.9375rem; max-width: 420px; margin: 0 auto 2rem; }
+    .project-search-card {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s;
+    }
+    .project-search-card:first-child { border-top: 1px solid var(--border); }
+    .project-search-card:hover h3 { color: var(--accent); }
+    .project-search-img {
+      width: 160px;
+      height: 100px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .project-search-info { flex: 1; }
+    .project-search-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.375rem;
+    }
+    .project-search-card h3 {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      margin-bottom: 0.375rem;
+      transition: color 0.2s;
+    }
+    .project-search-card p {
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .suggest-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .suggest-tag {
+      padding: 0.375rem 0.875rem;
+      border: 1px solid var(--border);
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--background);
+      color: var(--foreground);
+    }
+    .suggest-tag:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header-placeholder"></div>
+
+  <!-- Search hero -->
+  <section class="search-hero">
+    <div class="container">
+      <p class="section-eyebrow">Search</p>
+      <h1 style="font-size:clamp(2rem,4vw,3rem);animation:fadeInUp 0.7s ease both;">Find Products & Projects</h1>
+      <div class="search-bar-wrap">
+        <input
+          type="search"
+          id="search-input"
+          class="search-input-big"
+          placeholder="Try 'walnut table', 'leather chair', 'Finance'…"
+          autocomplete="off"
+          autofocus
+        >
+        <svg class="search-icon" id="search-icon-svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <button class="search-clear" id="search-clear" aria-label="Clear search">✕</button>
+      </div>
+      <p class="search-meta" id="search-meta">100 products across 14 categories · 20 projects</p>
+      <div class="suggest-tags" id="suggest-tags">
+        <span class="suggest-tag" data-q="executive chair">Executive Chair</span>
+        <span class="suggest-tag" data-q="walnut">Walnut</span>
+        <span class="suggest-tag" data-q="outdoor">Outdoor</span>
+        <span class="suggest-tag" data-q="marble">Marble</span>
+        <span class="suggest-tag" data-q="hospital">Hospital</span>
+        <span class="suggest-tag" data-q="finance">Finance</span>
+        <span class="suggest-tag" data-q="sofa">Sofa</span>
+        <span class="suggest-tag" data-q="bollard">Bollard</span>
+        <span class="suggest-tag" data-q="workstation">Workstation</span>
+        <span class="suggest-tag" data-q="teak">Teak</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section style="padding:3rem 0 6rem;">
+    <div class="container">
+
+      <!-- Tabs -->
+      <div class="search-tabs" id="search-tabs" style="display:none;">
+        <button class="search-tab active" data-tab="products">
+          Products <span class="result-count-badge" id="tab-count-products">0</span>
+        </button>
+        <button class="search-tab" data-tab="projects">
+          Projects <span class="result-count-badge" id="tab-count-projects">0</span>
+        </button>
+        <button class="search-tab" data-tab="all">
+          All Results <span class="result-count-badge" id="tab-count-all">0</span>
+        </button>
+      </div>
+
+      <!-- Products panel -->
+      <div id="panel-products">
+        <div class="products-grid" id="results-products"></div>
+      </div>
+
+      <!-- Projects panel -->
+      <div id="panel-projects" style="display:none;">
+        <div id="results-projects"></div>
+      </div>
+
+      <!-- All panel -->
+      <div id="panel-all" style="display:none;">
+        <div id="results-all-products"></div>
+        <div id="results-all-projects"></div>
+      </div>
+
+      <!-- Empty / idle state -->
+      <div id="idle-state" class="empty-state">
+        <div style="font-size:3rem;margin-bottom:1.5rem;">⌕</div>
+        <h3>Search our catalogue</h3>
+        <p>Enter a material, category, product name or project type above to instantly search all 100 products and 20 projects.</p>
+        <a href="products.html" class="btn-dark" style="display:inline-flex;margin-top:0.5rem;">Browse All Products</a>
+      </div>
+
+      <div id="empty-state" class="empty-state" style="display:none;">
+        <div style="font-size:3rem;margin-bottom:1.5rem;">○</div>
+        <h3>No results found</h3>
+        <p id="empty-msg">No products or projects matched your search. Try a different term or browse by category.</p>
+        <a href="products.html" class="btn-dark" style="display:inline-flex;margin-top:0.5rem;">Browse All Products</a>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/prices.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/sheets-cms.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/chatbot.js"></script>
+</body>
+</html>
