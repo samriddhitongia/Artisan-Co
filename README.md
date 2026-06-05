@@ -1,6 +1,6 @@
 # Artisan & Co. — Premium Furniture Studio
 
-A fully static, zero-backend e-commerce and portfolio site for a B2B furniture brand, powered by **Google Sheets as a live CMS**. No database, no server framework — just HTML, CSS, and vanilla JavaScript with the Google Sheets API v4 as the data layer.
+A fully static,e-commerce and portfolio site for a B2B furniture brand, powered by **Google Sheets as a live CMS**. No database, no server framework — just HTML, CSS, and vanilla JavaScript with the Google Sheets API v4 as the data layer.
 
 ---
 
